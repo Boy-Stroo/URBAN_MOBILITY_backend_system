@@ -1,0 +1,7 @@
+# pycache files
+__pycache__/
+*.py[cod]
+
+# generated files
+*.db
+secret.key

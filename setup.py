@@ -23,21 +23,21 @@ def setup_initial_accounts():
     # The username '(setup_script)' will appear in the logs.
     setup_user = services.User(user_id=0, username='(setup_script)', role='System')
 
-    existing_user = data_access.find_user_by_username("superadmin")
+    existing_user = data_access.find_user_by_username("super_admin")
     if existing_user:
-        print("\n!! A 'superadmin' user already exists in the database. !!")
+        print("\n!! A 'super_admin' user already exists in the database. !!")
         print("Setup aborted.")
         return
 
     # 3. Create the Super Administrator account
     print("\nCreating the initial Super Administrator account...")
-    print("Username: superadmin")
-    print("Password: superadmin")
+    print("Username: super_admin")
+    print("Password: Admin_123?")
 
     # Use the audited service function to create the user
     user_id = services.add_new_super_admin(
-        username="superadmin",
-        password="superadmin",
+        username="super_admin",
+        password="Admin_123?",
         first_name="Default",
         last_name="SuperAdmin",
         current_user=setup_user  # Pass the dummy user for logging

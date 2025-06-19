@@ -13,6 +13,7 @@ RE_SCOOTER_SERIAL = re.compile(r'^[A-Za-z0-9]{10,17}$')
 RE_ALPHA_ONLY = re.compile(r'^[a-zA-Z\s.-]+$') # Allows letters, spaces, hyphens, dots
 RE_ALPHA_NUMERIC_ONLY = re.compile(r'^[a-zA-Z0-9\s.,#-]+$') # Allows more characters for addresses
 RE_HOUSE_NUMBER = re.compile(r'^\d{1,5}(\s*-?\s*[a-zA-Z0-9-]+)?$') # For Dutch house numbers e.g., 123, 123A, 123-A
+RE_FIVE_DECIMAL = re.compile(r'^\d{1,5}(\.\d{5})?$')
 
 # --- Validation Functions ---
 # Each function now returns a tuple: (is_valid: bool, message: str or None)
@@ -141,3 +142,16 @@ def is_valid_float(value):
         return True, None
     except ValueError:
         return False, "Input must be a valid number (e.g., 50 or 25.5)."
+
+
+def validate_rotterdam_coordinates(coord, direction):
+    """Validate coordinates are within Rotterdam region"""
+    rotterdam_bounds = {
+        'latitude': {'min': 51.89000, 'max': 51.94000},
+        'longitude':{'min': 4.40000, 'max': 4.55000}
+    }
+
+    if not RE_FIVE_DECIMAL.match(coord):
+        return False, "Coordinate must be a number with 5 decimal places. For example, 51.92250."
+
+    return rotterdam_bounds[direction]['min'] <= coord <= rotterdam_bounds[direction]['max']

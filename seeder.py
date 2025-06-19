@@ -14,7 +14,7 @@ def seed_database():
     # We need a user object to pass to the service functions for auditing purposes.
     # Since this is a system script, we can use a placeholder user.
     # We'll use the superadmin user for this, assuming it exists.
-    seeder_user = User(user_id=1, username='superadmin', role='SuperAdmin')
+    seeder_user = User(user_id=1, username='super_admin', role='SuperAdmin')
 
     # --- Seed Scooters ---
     print("\n[1/2] Seeding Scooters...")

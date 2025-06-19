@@ -4,6 +4,7 @@ from models import User
 import json
 import inspect
 
+da = da.DataAccess()
 
 def _find_user_in_args(*args, **kwargs):
     """A helper to find the User object in the decorated function's arguments."""

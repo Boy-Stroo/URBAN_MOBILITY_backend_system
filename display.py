@@ -1,4 +1,3 @@
-from tabulate import tabulate
 import time
 from datetime import datetime, timedelta
 
@@ -10,6 +9,32 @@ TABLE_STYLES = {
     "compact": "pipe",
     "detailed": "fancy_grid"
 }
+
+def display_search_results_table(items, display_key):
+    """
+    Displays a list of items in a table format and returns the selected item.
+
+    :param items: List of dictionaries containing the items to display
+    :param display_key: The key in each item dictionary that contains the display text
+    :param headers: Optional list of column headers
+    :return: The selected item or None if cancelled
+    """
+    print("Displaying search results")
+    for index, item in enumerate(items):
+        display_text = item.get(display_key, "N/A")
+        print(f"    [{index + 1}] {display_text}")
+    print("    [0] Cancel")
+
+    choice = input("Select an item by number: ").strip()
+    if choice.isdigit():
+        choice_index = int(choice) - 1
+        if 0 <= choice_index < len(items):
+            return items[choice_index]
+        elif choice_index == -1:
+            return None
+
+
+
 
 
 def display_system_logs_paginated(logs):
@@ -50,7 +75,16 @@ def display_system_logs_paginated(logs):
                 suspicious_flag
             ])
 
-        print(tabulate(table_data, headers=headers, tablefmt=TABLE_STYLES["detailed"]))
+        # print(tabulate(table_data, headers=headers, tablefmt=TABLE_STYLES["detailed"]))
+
+        # Without tabulate for simplicity in this example
+        print("=" * 174)
+        print(f"| {'Time':<30} | {'User':<15} | {'Event':<20} | {'Description':<50} | {'Details':<30} | {'Suspicious':<10} |")
+        print("=" * 174)
+        for row in table_data:
+            # for row 5 split the margin between in front and after the text
+            print(f"| {row[0]:<30} | {row[1]:<15} | {row[2]:<20} | {row[3]:<50} | {row[4]:<30} | {row[5]:^10} |")
+
 
         print("\n[N] Next Page | [P] Previous Page | [Q] Quit to Menu")
         choice = get_input("Your choice").upper()
@@ -81,58 +115,29 @@ if __name__ == '__main__':
 
     print("--- Testing Display Module ---")
 
-    # 1. Create some fake log data
-    now = datetime.now()
-    fake_logs = [
-        {
-            'timestamp': (now - timedelta(minutes=15)).isoformat(sep=' ', timespec='seconds'),
-            'username': 'sysadmin1',
-            'event_type': 'LOGIN_SUCCESS',
-            'description': 'User logged in successfully.',
-            'additional_info': 'Source IP: 192.168.1.100',
-            'is_suspicious': 0
-        },
-        {
-            'timestamp': (now - timedelta(minutes=10)).isoformat(sep=' ', timespec='seconds'),
-            'username': 'service_eng',
-            'event_type': 'UPDATE_SCOOTER',
-            'description': 'Updated scooter status.',
-            'additional_info': 'Scooter ID: 102, SoC: 85%',
-            'is_suspicious': 0
-        },
-        {
-            'timestamp': (now - timedelta(minutes=5)).isoformat(sep=' ', timespec='seconds'),
-            'username': '(anonymous)',
-            'event_type': 'LOGIN_FAILURE',
-            'description': 'Failed login attempt.',
-            'additional_info': 'Attempt for user: admin',
-            'is_suspicious': 1
-        },
-        {
-            'timestamp': (now - timedelta(minutes=2)).isoformat(sep=' ', timespec='seconds'),
-            'username': 'sysadmin1',
-            'event_type': 'ADD_TRAVELLER',
-            'description': 'New traveller added.',
-            'additional_info': 'Traveller ID: 5821',
-            'is_suspicious': 0
-        },
+    # Example data for testing
+    example_items = [
+        {"id": 1, "name": "Item One", "value": 100},
+        {"id": 2, "name": "Item Two", "value": 200},
+        {"id": 3, "name": "Item Three", "value": 300}
     ]
-
-    # 2. Demonstrate the centralized table styles
-    print("\n--- Demonstrating Different Table Styles ---")
-
-    headers = ["Timestamp", "Username", "Event", "Description", "Suspicious"]
-    table_data = [[log['timestamp'], log['username'], log['event_type'], log['description'],
-                   "[!]" if log['is_suspicious'] else ""] for log in fake_logs]
-
-    for style_name, table_format in TABLE_STYLES.items():
-        print(f"\n--- Style: '{style_name}' (tablefmt='{table_format}') ---")
-        print(tabulate(table_data, headers=headers, tablefmt=table_format))
-
-    print("\n--- Log Pagination Test (run with more data to see pages) ---")
-    # To test pagination, you can generate more fake data:
-    # fake_logs.extend([fake_logs[0]] * 10)
-    display_system_logs_paginated(fake_logs)
-
-    print("\n--- End of Test ---")
-
+    example_headers = ["id", "name", "value"]
+    selected_item = display_search_results_table(example_items, "name", example_headers)
+    if selected_item:
+        print(f"Selected Item: {selected_item}")
+    else:
+        print("No item selected.")
+    # Example logs for testing pagination
+    example_logs = [
+        {
+            "timestamp": datetime.now() - timedelta(days=i),
+            "username": f"user{i}",
+            "event_type": "Event Type",
+            "description": f"Description of event {i}",
+            "additional_info": f"Details for event {i}",
+            "is_suspicious": i % 2 == 0  # Even indexed logs are suspicious
+        } for i in range(25)  # Create 25 log entries for testing
+    ]
+    display_system_logs_paginated(example_logs)
+    print("--- End of Display Module Test ---")
+    input("\nPress Enter to exit...")

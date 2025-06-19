@@ -26,7 +26,7 @@ class Traveller:
         self.mobile_phone = mobile_phone
         self.driving_license_number = driving_license_number
         # Registration date is usually set by the system
-        self.registration_date = registration_date
+        self.registration_date = registration_date or datetime.datetime.now().date().strftime('%Y-%m-%d')
 
     def __str__(self):
         """String representation for easy printing."""
@@ -97,12 +97,12 @@ class UserProfile:
     Represents the profile information associated with a User.
     This data is separate from the core authentication data.
     """
-    def __init__(self, profile_id, user_id, first_name, last_name, registration_date):
+    def __init__(self, profile_id, user_id, first_name, last_name, registration_date = None):
         self.profile_id = profile_id
         self.user_id = user_id
         self.first_name = first_name
         self.last_name = last_name
-        self.registration_date = registration_date
+        self.registration_date = registration_date or datetime.datetime.now().date().strftime('%Y-%m-%d')
 
     def __str__(self):
         """String representation for easy printing."""

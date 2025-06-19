@@ -14,7 +14,7 @@ def seed_database():
     # We need a user object to pass to the service functions for auditing purposes.
     # Since this is a system script, we can use a placeholder user.
     # We'll use the superadmin user for this, assuming it exists.
-    seeder_user = User(user_id=1, username='super_admin', role='SuperAdmin')
+    seeder_user = User(user_id=1, username='super_admin', role='superadmin')
 
     # --- Seed Scooters ---
     print("\n[1/2] Seeding Scooters...")
@@ -22,7 +22,7 @@ def seed_database():
         {
             'scooter_id': None, 'brand': 'Segway', 'model': 'Ninebot G30', 'serial_number': 'SNX987654321',
             'top_speed_kmh': 25, 'battery_capacity_wh': 551, 'soc_percentage': 88.5,
-            'target_soc_min': 20.0, 'target_soc_max': 95.0, 'location_latitude': 51.9178, 'location_longitude': 4.3908,
+            'target_soc_min': 20.0, 'target_soc_max': 95.0, 'location_latitude': 51.9178, 'location_longitude': 4.5608,
             # Schiedam Centrum
             'out_of_service': False, 'mileage_km': 1204.5, 'last_maintenance_date': '2025-05-20',
             'in_service_date': datetime.now()
@@ -55,19 +55,19 @@ def seed_database():
     print("\n[2/2] Seeding Travellers...")
     travellers_to_add = [
         {
-            'first_name': 'Lotte', 'last_name': 'de Vries', 'birthday': '1998-08-15', 'gender': 'Female',
+            'first_name': 'Lotte', 'last_name': 'de Vries', 'birthday': '1998-08-12', 'gender': 'Female',
             'street_name': 'Hoofdstraat', 'house_number': '24A', 'zip_code': '3111AA', 'city': 'Schiedam',
             'email_address': 'lotte.devries@example.com', 'mobile_phone': '+31-6-12345678',
             'driving_license_number': 'DE12345678'
         },
         {
-            'first_name': 'Daan', 'last_name': 'Jansen', 'birthday': '2001-03-22', 'gender': 'Male',
+            'first_name': 'Daan', 'last_name': 'Jansen', 'birthday': '2001-03-21', 'gender': 'Male',
             'street_name': 'Nieuwe Binnenweg', 'house_number': '182', 'zip_code': '3015BE', 'city': 'Rotterdam',
             'email_address': 'daan.jansen@example.com', 'mobile_phone': '+31-6-87654321',
             'driving_license_number': 'JA8765432'
         },
         {
-            'first_name': 'Fleur', 'last_name': 'van Dijk', 'birthday': '1995-11-01', 'gender': 'Female',
+            'first_name': 'Fleur', 'last_name': 'van Dijk', 'birthday': '1995-01-11', 'gender': 'Female',
             'street_name': 'Lange Haven', 'house_number': '55', 'zip_code': '3111CB', 'city': 'Schiedam',
             'email_address': 'fleur.vandijk@example.com', 'mobile_phone': '+31-6-11223344',
             'driving_license_number': 'VD1122334'

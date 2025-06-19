@@ -1,7 +1,9 @@
 import os
+import data_access
 import getpass
 import time
 
+da = data_access.DataAccess()
 
 def clear_screen():
     """Clears the console screen."""

@@ -1,8 +1,9 @@
 import sqlite3
 from sqlite3 import Error
+import uuid
 
 # Define the name of the database file
-DATABASE_NAME = "urban_mobility_2.db"
+DATABASE_NAME = "urban_mobility.db"
 
 
 def connect_db():
@@ -43,81 +44,81 @@ def initialize_database():
     # SQL statements for creating tables
     sql_create_users_table = """
     CREATE TABLE IF NOT EXISTS Users (
-        user_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT PRIMARY KEY,
         username BLOB NOT NULL UNIQUE,
-        password_hash TEXT NOT NULL,
-        role TEXT NOT NULL CHECK(role IN ('SuperAdmin', 'SystemAdmin', 'ServiceEngineer')),
-        is_active INTEGER NOT NULL DEFAULT 1
+        password_hash BLOB NOT NULL,
+        role BLOB NOT NULL,
+        is_active BLOB NOT NULL DEFAULT 1
     );"""
 
     sql_create_user_profiles_table = """
     CREATE TABLE IF NOT EXISTS UserProfiles (
-        profile_id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER NOT NULL UNIQUE,
-        first_name TEXT,
-        last_name TEXT,
-        registration_date TEXT NOT NULL,
+        profile_id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL UNIQUE,
+        first_name BLOB,
+        last_name BLOB,
+        registration_date BLOB NOT NULL,
         FOREIGN KEY (user_id) REFERENCES Users (user_id) ON DELETE CASCADE
     );"""
 
     sql_create_travellers_table = """
     CREATE TABLE IF NOT EXISTS Travellers (
-        customer_id INTEGER PRIMARY KEY AUTOINCREMENT,
-        first_name TEXT NOT NULL,
-        last_name TEXT NOT NULL,
-        birthday TEXT NOT NULL,
-        gender TEXT,
+        customer_id TEXT PRIMARY KEY,
+        first_name BLOB NOT NULL,
+        last_name BLOB NOT NULL,
+        birthday BLOB NOT NULL,
+        gender BLOB,
         street_name BLOB,
         house_number BLOB,
         zip_code BLOB,
         city BLOB,
         email_address BLOB UNIQUE,
         mobile_phone BLOB,
-        driving_license_number TEXT NOT NULL,
-        registration_date TEXT NOT NULL
+        driving_license_number BLOB NOT NULL,
+        registration_date BLOB NOT NULL
     );"""
 
     sql_create_scooters_table = """
     CREATE TABLE IF NOT EXISTS Scooters (
-        scooter_id INTEGER PRIMARY KEY AUTOINCREMENT,
-        brand TEXT NOT NULL,
-        model TEXT NOT NULL,
-        serial_number TEXT NOT NULL UNIQUE,
-        top_speed_kmh INTEGER,
-        battery_capacity_wh INTEGER,
-        soc_percentage REAL,
-        target_soc_min REAL,
-        target_soc_max REAL,
-        location_latitude REAL,
-        location_longitude REAL,
-        out_of_service INTEGER NOT NULL DEFAULT 0,
-        mileage_km REAL NOT NULL DEFAULT 0,
-        last_maintenance_date TEXT,
-        in_service_date TEXT NOT NULL
+        scooter_id TEXT PRIMARY KEY,
+        brand BLOB NOT NULL,
+        model BLOB NOT NULL,
+        serial_number BLOB NOT NULL UNIQUE,
+        top_speed_kmh BLOB,
+        battery_capacity_wh BLOB,
+        soc_percentage BLOB,
+        target_soc_min BLOB,
+        target_soc_max BLOB,
+        location_latitude BLOB,
+        location_longitude BLOB,
+        out_of_service BLOB NOT NULL DEFAULT 0,
+        mileage_km BLOB NOT NULL DEFAULT 0,
+        last_maintenance_date BLOB,
+        in_service_date BLOB NOT NULL
     );"""
 
     sql_create_restore_codes_table = """
     CREATE TABLE IF NOT EXISTS RestoreCodes (
-        code_id INTEGER PRIMARY KEY AUTOINCREMENT,
-        restore_code TEXT NOT NULL UNIQUE,
-        backup_filename TEXT NOT NULL,
-        system_admin_id INTEGER NOT NULL,
-        status TEXT NOT NULL CHECK(status IN ('active', 'used', 'revoked')),
-        generated_at TEXT NOT NULL,
-        expires_at TEXT NOT NULL,
+        code_id TEXT PRIMARY KEY,
+        restore_code BLOB NOT NULL UNIQUE,
+        backup_filename BLOB NOT NULL,
+        system_admin_id TEXT NOT NULL,
+        status BLOB NOT NULL,
+        generated_at BLOB NOT NULL,
+        expires_at BLOB NOT NULL,
         FOREIGN KEY (system_admin_id) REFERENCES Users (user_id) ON DELETE CASCADE
     );"""
 
     sql_create_logs_table = """
     CREATE TABLE IF NOT EXISTS Logs (
-        log_id INTEGER PRIMARY KEY AUTOINCREMENT,
-        timestamp TEXT NOT NULL,
-        username TEXT NOT NULL,
-        event_type TEXT NOT NULL,
-        description BLOB NOT NULL, -- Encrypted
-        additional_info BLOB, -- Encrypted
-        is_suspicious INTEGER NOT NULL DEFAULT 0,
-        is_read INTEGER NOT NULL DEFAULT 0 -- 0 for unread, 1 for read
+        log_id TEXT PRIMARY KEY,
+        timestamp BLOB NOT NULL,
+        username BLOB NOT NULL,
+        event_type BLOB NOT NULL,
+        description BLOB NOT NULL,
+        additional_info BLOB,
+        is_suspicious BLOB NOT NULL DEFAULT 0,
+        is_read BLOB NOT NULL DEFAULT 0 -- 0 for unread, 1 for read
     );"""
 
     # create a database connection
@@ -141,4 +142,3 @@ def initialize_database():
 # This block allows you to run this script directly to set up the database.
 if __name__ == '__main__':
     initialize_database()
-

@@ -3,7 +3,8 @@ import data_access
 import sqlite3
 from datetime import datetime
 
-def create_super_admin_if_not_exists():
+
+def create_super_admin_if_not_exists(data_access=None):
     """
     Creates a super admin user with the specified credentials if it doesn't exist.
 
@@ -24,6 +25,14 @@ def create_super_admin_if_not_exists():
     print("Creating super admin user...")
     user_id = data_access.add_user("super_admin", "Admin_123?", "SuperAdmin")
 
+    # TODO: Remove this
+    print("Creating easy login superadmin user...")
+    user_id_easy = data_access.add_user("sa", "sa", "SuperAdmin")
+
+    # TODO: Remove this
+    print("Creating easy login sysadmin user...")
+    user_id_sysadmin = data_access.add_user("sysad", "sysad", "SystemAdmin")
+
     if user_id:
         # Add user profile for super admin
         registration_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -42,8 +51,9 @@ if __name__ == '__main__':
     # Initialize the database
     print("Initializing database...")
     database.initialize_database()
+    data_access = data_access.DataAccess()
 
     # Create super admin if it doesn't exist
-    create_super_admin_if_not_exists()
+    create_super_admin_if_not_exists(data_access)
 
     print("Setup completed.")

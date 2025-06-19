@@ -1,5 +1,5 @@
 import data_access as da
-from models import Traveller, Scooter, UserProfile, User, RestoreCode
+from models import Traveller, Scooter, User, RestoreCode #, UserProfile
 from datetime import datetime, timedelta
 from security import SecurityManager
 from auditing import audit_activity
@@ -11,6 +11,7 @@ import shutil
 import secrets
 
 security = SecurityManager()
+da = da.DataAccess()
 
 
 # --- Traveller Services ---
@@ -27,6 +28,7 @@ def add_new_traveller(data, current_user):
                                   house_number=data['house_number'], zip_code=data['zip_code'], city=data['city'],
                                   email_address=data['email_address'], mobile_phone=data['mobile_phone'],
                                   driving_license_number=data['driving_license_number'])
+        print(f"Adding new traveller: {traveller_obj.first_name} {traveller_obj.last_name}")
         traveller_id = da.add_traveller(traveller_obj)
         if traveller_id:
             print(f"Successfully added traveller. New Traveller ID: {traveller_id}")
@@ -84,7 +86,7 @@ def add_new_service_engineer(username, password, first_name, last_name, current_
         print("Error: Permission denied.")
         return None
     try:
-        user_id = da.add_user(username, password, 'ServiceEngineer')
+        user_id = da.add_user(username, password, 'serviceengineer')
         if user_id:
             reg_date = datetime.now().isoformat()
             profile_created = da.add_user_profile(user_id, first_name, last_name, reg_date)
@@ -114,7 +116,7 @@ def add_new_system_admin(username, password, first_name, last_name, current_user
                          "Unauthorized attempt to create a System Admin.", is_suspicious=1)
         return None
     try:
-        user_id = da.add_user(username, password, 'SystemAdmin')
+        user_id = da.add_user(username, password, 'systemadmin')
         if user_id:
             reg_date = datetime.now().isoformat()
             profile_created = da.add_user_profile(user_id, first_name, last_name, reg_date)
@@ -140,7 +142,7 @@ def find_system_admins(query, current_user):
     if not authorization.has_permission(current_user.role, 'generate_restore_code'):
         print("Error: Permission denied.")
         return []
-    all_admins = da.get_all_users_by_role('SystemAdmin')
+    all_admins = da.get_all_users_by_role('systemadmin')
     if not query:
         return all_admins
 
@@ -158,7 +160,7 @@ def find_service_engineers(query, current_user):
         print("Error: Permission denied.")
         return []
     da.add_log_entry(current_user.username, "SEARCH_USER", f"Searched for Service Engineers with query: '{query}'")
-    all_engineers = da.get_all_users_by_role('ServiceEngineer')
+    all_engineers = da.get_all_users_by_role('serviceengineer')
     if not query:
         return all_engineers
 
@@ -174,6 +176,9 @@ def get_service_engineer_details(user_id, current_user):
     """Gets full profile details for a single service engineer."""
     return da.get_user_profile_by_user_id(user_id)
 
+def get_system_admin_details(user_id, current_user):
+    """Gets full profile details for a single system admin."""
+    return da.get_user_profile_by_user_id(user_id)
 
 @audit_activity("UPDATE_OWN_PROFILE", "Successfully updated own profile", "Failed to update own profile")
 def update_own_profile(user_id, first_name, last_name, current_user):
@@ -202,7 +207,8 @@ def change_own_password(current_user, old_password, new_password):
         return False, "Incorrect old password."
 
     new_hashed_password = security.hash_password(new_password)
-    success = da.update_user_password(current_user.user_id, new_hashed_password.decode('utf-8'))
+    encrypted_hashed_password = security.encrypt_data(new_hashed_password.decode('utf-8'))
+    success = da.update_user_password(current_user.user_id, encrypted_hashed_password)
     return success, "Password updated successfully." if success else "Failed to update password."
 
 
@@ -214,6 +220,13 @@ def update_service_engineer_profile(profile_obj, current_user):
         return False
     return da.update_user_profile(profile_obj.user_id, profile_obj.first_name, profile_obj.last_name)
 
+@audit_activity("UPDATE_SYSTEM_ADMIN_PROFILE", "Successfully updated system admin profile", "Failed to update system admin profile")
+def update_system_admin_profile(profile_obj, current_user):
+    """Updates a system admin's profile and logs the action."""
+    if not authorization.has_permission(current_user.role, 'update_system_admin_profile'):
+        print("Error: Permission denied.")
+        return False
+    return da.update_user_profile(profile_obj.user_id, profile_obj.first_name, profile_obj.last_name)
 
 @audit_activity("DELETE_USER", "Successfully deactivated user", "Failed to deactivate user", suspicious_on_fail=True)
 def delete_service_engineer(user_id, current_user):
@@ -223,6 +236,13 @@ def delete_service_engineer(user_id, current_user):
         return False
     return da.delete_user_by_id(user_id)
 
+@audit_activity("DELETE_SYSTEM_ADMIN", "Successfully deactivated system admin", "Failed to deactivate system admin", suspicious_on_fail=True)
+def delete_system_admin(user_id, current_user):
+    """Deletes (soft) a system admin and logs the action."""
+    if not authorization.has_permission(current_user.role, 'delete_system_admin'):
+        print("Error: Permission denied.")
+        return False
+    return da.delete_user_by_id(user_id)
 
 @audit_activity("PASSWORD_RESET", "Password was successfully reset", "Password reset failed", suspicious_on_fail=True)
 def reset_service_engineer_password(user_id, new_password, current_user):
@@ -233,7 +253,8 @@ def reset_service_engineer_password(user_id, new_password, current_user):
         print("Error: Permission denied.")
         return False
     hashed_password = security.hash_password(new_password)
-    return da.update_user_password(user_id, hashed_password.decode('utf-8'))
+    encrypted_password = security.encrypt_data(hashed_password.decode('utf-8'))
+    return da.update_user_password(user_id, encrypted_password)
 
 
 # --- Scooter Services ---
@@ -376,8 +397,8 @@ def restore_from_backup(backup_file, current_user, restore_code_obj=None):
     if not os.path.exists(backup_path):
         return False, f"Backup file '{backup_path}' not found."
 
+    temp_backup_db = db_file + ".temp_restore_bak"
     try:
-        temp_backup_db = db_file + ".temp_restore_bak"
         if os.path.exists(db_file):
             shutil.copy2(db_file, temp_backup_db)
 
@@ -425,6 +446,16 @@ def generate_restore_code(system_admin_id, backup_filename, current_user):
     else:
         return None
 
+@audit_activity("GET_RESTORE_CODES", "Got al restore codes for System Admin ID: {system_admin_id}",
+                "Failed to get restore codes.")
+def remove_restore_code(system_admin_id, current_user):
+    """Retrieves all restore codes for a specific System Admin."""
+    if not authorization.has_permission(current_user.role, 'generate_restore_code'):
+        print("Error: Permission denied.")
+        return False
+
+    return da.get_restore_codes_by_system_admin(system_admin_id),
+
 
 @audit_activity("VALIDATE_RESTORE_CODE", "Restore code validated for user {current_user.username}",
                 "Restore code validation failed for user {current_user.username}", suspicious_on_fail=True)
@@ -446,3 +477,30 @@ def validate_restore_code(restore_code_value, current_user):
 
     # If all checks pass, return the valid code object
     return code_obj, "Restore code is valid."
+
+
+if __name__ == "__main__":
+    print("This module is not meant to be run directly. Use the main application to access these services.")
+    # Test add_new_traveller
+    # Uncomment the following lines to test the add_new_traveller function
+    # traveller_obj = Traveller(customer_id=None, first_name=data['first_name'], last_name=data['last_name'],
+    #                           birthday=data['birthday'], gender=data['gender'], street_name=data['street_name'],
+    #                           house_number=data['house_number'], zip_code=data['zip_code'], city=data['city'],
+    #                           email_address=data['email_address'], mobile_phone=data['mobile_phone'],
+    #                           driving_license_number=data['driving_license_number'])
+    test_data = {
+        'first_name': 'John',
+        'last_name': 'Doe',
+        'birthday': '01-01-1990',
+        'gender': 'male',
+        'zip_code': '12345',
+        'city': 'Test City',
+        'street_name': 'Test Street',
+        'house_number': '1A',
+        'mobile_phone': '+31-6-12345678',
+        'email_address': 'john.doe@example.com',
+        'driving_license_number': 'TEST123456'
+    }
+    user = User(user_id='admin', username='admin', role='systemadmin')  # Mock user for testing
+    add_new_traveller(test_data, user)
+

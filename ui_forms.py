@@ -6,6 +6,8 @@ from ui_utils import display_header, get_validated_input, get_input, get_passwor
 import time
 from datetime import datetime
 import display
+import data_access
+
 
 
 # --- Helper Functions ---
@@ -14,6 +16,7 @@ def select_from_list(prompt, item_list, display_key):
     if not item_list:
         print("No items found.")
         return None
+
 
     print(f"\n{prompt}")
     for idx, item in enumerate(item_list):
@@ -48,7 +51,10 @@ def _search_and_select_item(search_prompt, search_function, current_user, result
         return None
 
     display_list = [result_formatter(r) for r in results]
-    selected = select_from_list(selection_prompt, display_list, 'display')
+
+    # Use table display for search results
+    import display
+    selected = display.display_search_results_table(display_list, 'display')
 
     return selected
 
@@ -60,11 +66,11 @@ def ui_add_traveller(user):
     first_name = get_validated_input("First Name", validators.is_valid_name)
     last_name = get_validated_input("Last Name", validators.is_valid_name)
     birthday = get_validated_input("Birthday (YYYY-MM-DD)", validators.is_valid_date)
-    gender = get_input("Gender", required=False)
+    gender = get_validated_input("Gender (male/female)", validators.is_valid_gender)
     street_name = get_validated_input("Street Name", validators.is_valid_address_field)
     house_number = get_validated_input("House Number", validators.is_valid_house_number)
     zip_code = get_validated_input("Zip Code (e.g., 1234AB)", validators.is_valid_zip_code)
-    city = get_validated_input("City", validators.is_valid_name)
+    city = get_validated_input("City", validators.is_valid_city)
     email_address = get_validated_input("Email Address", validators.is_valid_email)
     mobile_phone = get_validated_input("Mobile Phone (+31-6-XXXXXXXX)", validators.is_valid_mobile_phone,
                                        pre_prompt='+31-6-')
@@ -92,7 +98,7 @@ def ui_search_travellers(user):
         selection_prompt="Select a traveller to view details:",
         no_results_message="\nNo travellers found matching '{query}'."
     )
-
+    print("\nTraveller Search Results:")
     if selected:
         traveller_obj = services.get_traveller_details(selected['id'], user)
         if traveller_obj:
@@ -106,7 +112,7 @@ def ui_search_travellers(user):
             print(f"  Phone: {traveller_obj.mobile_phone}")
             print(f"  License #: {traveller_obj.driving_license_number}")
             print(f"  Registered: {traveller_obj.registration_date}")
-    input("\nPress Enter to return...")
+            input("\nPress Enter to return to the menu...")
 
 
 def ui_update_traveller(user):
@@ -141,14 +147,14 @@ def ui_update_traveller(user):
                   "validator": validators.is_valid_name},
             "3": {"prompt": "Birthday", "attr": "birthday", "value": traveller_obj.birthday,
                   "validator": validators.is_valid_date},
-            "4": {"prompt": "Gender", "attr": "gender", "value": traveller_obj.gender, "validator": None},
+            "4": {"prompt": "Gender (male/female)", "attr": "gender", "value": traveller_obj.gender, "validator": validators.is_valid_gender},
             "5": {"prompt": "Street Name", "attr": "street_name", "value": traveller_obj.street_name,
                   "validator": validators.is_valid_address_field},
             "6": {"prompt": "House Number", "attr": "house_number", "value": traveller_obj.house_number,
                   "validator": validators.is_valid_house_number},
             "7": {"prompt": "Zip Code", "attr": "zip_code", "value": traveller_obj.zip_code,
                   "validator": validators.is_valid_zip_code},
-            "8": {"prompt": "City", "attr": "city", "value": traveller_obj.city, "validator": validators.is_valid_name},
+            "8": {"prompt": "City", "attr": "city", "value": traveller_obj.city, "validator": validators.is_valid_city},
             "9": {"prompt": "Email Address", "attr": "email_address", "value": traveller_obj.email_address,
                   "validator": validators.is_valid_email},
             "10": {"prompt": "Mobile Phone", "attr": "mobile_phone", "value": traveller_obj.mobile_phone,
@@ -222,7 +228,7 @@ def ui_delete_traveller(user):
 def ui_update_own_profile(user):
     """UI flow for a user to update their own profile."""
     display_header("Update My Profile")
-    profile_obj = services.get_service_engineer_details(user.user_id, user)
+    profile_obj, username = services.get_service_engineer_details(user.user_id, user)
     if not profile_obj:
         print("Could not retrieve your profile.")
         input("\nPress Enter...")
@@ -277,6 +283,83 @@ def ui_add_system_admin(user):
     services.add_new_system_admin(username, password, first_name, last_name, user)
     input("\nPress Enter to return to the menu...")
 
+def ui_search_system_admins(user):
+    """UI flow for searching System Administrators and viewing details."""
+    display_header("Search for System Administrator")
+
+    selected = _search_and_select_item(
+        search_prompt="Enter username or name to search for",
+        search_function=services.find_system_admins,
+        current_user=user,
+        result_formatter=lambda r: {'display': f"{r['name']} ({r['username']})", 'id': r['id']},
+        selection_prompt="Select a System Administrator to view details:",
+        no_results_message="\nNo System Administrators found matching '{query}'."
+    )
+
+    if selected:
+        admin_obj, username = services.get_system_admin_details(selected['id'], user)
+        if admin_obj:
+            display_header(f"Details for {admin_obj.first_name} {admin_obj.last_name}")
+            print(f"  Username: {username}")
+            print(f"  Registered on: {admin_obj.registration_date}")
+    input("\nPress Enter to return...")
+
+def ui_update_system_admin(user):
+    """UI flow for finding and updating a System Administrator."""
+    display_header("Update System Administrator Profile")
+
+    selected = _search_and_select_item(
+        search_prompt="Enter username or name of admin to search for",
+        search_function=services.find_system_admins,
+        current_user=user,
+        result_formatter=lambda r: {'display': f"{r['name']} ({r['username']})", 'id': r['id']},
+        selection_prompt="Select a System Administrator to UPDATE:",
+        no_results_message="\nNo System Administrators found matching '{query}'."
+    )
+
+    if not selected:
+        return
+
+    profile_obj, username = services.get_system_admin_details(selected['id'], user)
+    if not profile_obj:
+        print("Could not retrieve profile details.")
+        input("\nPress Enter to return...")
+        return
+
+    while True:
+        display_header(f"Updating: {profile_obj.first_name} {profile_obj.last_name}")
+        print("Current Profile Details:")
+        print(f"  [1] First Name: {profile_obj.first_name}")
+        print(f"  [2] Last Name: {profile_obj.last_name}")
+        print("-" * 30)
+        print("Enter the number of the field to update. 'S' to Save, 'C' to Cancel.")
+        choice = get_input("\nYour choice").upper()
+
+        if choice == 'S':
+            print("\nSaving changes...")
+            if services.update_system_admin_profile(profile_obj, user):
+                print("Update successful.")
+            else:
+                print("Update failed.")
+            input("\nPress Enter to return...")
+            break
+        elif choice == 'C':
+            print("Update cancelled. No changes were saved.")
+            input("\nPress Enter to return...")
+            break
+        elif choice == '1':
+            new_val = get_validated_input(f"New First Name [{profile_obj.first_name}]", validators.is_valid_name,
+                                          required=False)
+            if new_val:
+                profile_obj.first_name = new_val
+        elif choice == '2':
+            new_val = get_validated_input(f"New Last Name [{profile_obj.last_name}]", validators.is_valid_name,
+                                          required=False)
+            if new_val:
+                profile_obj.last_name = new_val
+        else:
+            print("Invalid choice. Please try again.")
+            time.sleep(1)
 
 def ui_add_service_engineer(user):
     """UI flow for adding a new Service Engineer."""
@@ -306,7 +389,7 @@ def ui_update_service_engineer(user):
     if not selected:
         return
 
-    profile_obj = services.get_service_engineer_details(selected['id'], user)
+    profile_obj, username = services.get_service_engineer_details(selected['id'], user)
     if not profile_obj:
         print("Could not retrieve profile details.")
         input("\nPress Enter to return...")
@@ -375,6 +458,32 @@ def ui_delete_service_engineer(user):
         print("Deletion cancelled.")
     input("\nPress Enter to return...")
 
+def ui_delete_system_admin(user):
+    """UI flow for finding and deleting a System Administrator."""
+    display_header("Delete System Administrator")
+
+    selected = _search_and_select_item(
+        search_prompt="Enter username or name of admin to search for",
+        search_function=services.find_system_admins,
+        current_user=user,
+        result_formatter=lambda r: {'display': f"{r['name']} ({r['username']})", 'id': r['id']},
+        selection_prompt="Select a System Administrator to DELETE:",
+        no_results_message="\nNo System Administrators found matching '{query}'."
+    )
+
+    if not selected:
+        return
+
+    print("\n!! WARNING: This will permanently delete the user's account. !!")
+    confirm = get_input(f"Type 'DELETE' to permanently remove admin {selected['display']}: ")
+    if confirm == 'DELETE':
+        if services.delete_system_admin(selected['id'], user):
+            print("System Administrator has been deleted.")
+        else:
+            print("Failed to delete account.")
+    else:
+        print("Deletion cancelled.")
+    input("\nPress Enter to return...")
 
 def ui_reset_service_engineer_password(user):
     """UI flow for resetting a Service Engineer's password."""
@@ -422,8 +531,8 @@ def ui_add_scooter(user):
         'brand': get_input("Brand"),
         'model': get_input("Model"),
         'serial_number': get_validated_input("Serial Number (10-17 chars)", validators.is_valid_scooter_serial),
-        'top_speed_kmh': get_validated_input("Top Speed (km/h)", validators.is_valid_integer),
-        'battery_capacity_wh': get_validated_input("Battery Capacity (Wh)", validators.is_valid_integer),
+        'top_speed_kmh': get_validated_input("Top Speed (km/h)", validators.is_valid_speed),
+        'battery_capacity_wh': get_validated_input("Battery Capacity (Wh)", validators.is_valid_battery_capacity),
         'soc_percentage': get_validated_input("Current State of Charge (%)", validators.is_valid_soc),
         'target_soc_min': get_validated_input("Min Target SoC (%)", validators.is_valid_soc),
         'target_soc_max': get_validated_input("Max Target SoC (%)", validators.is_valid_soc),
@@ -651,7 +760,7 @@ def ui_restore_from_backup(user):
     backup_file = None
     restore_code_obj = None
 
-    if user.role == 'SystemAdmin':
+    if user.role == 'systemadmin':
         restore_code_value = get_input("Enter your one-time restore code")
         if not restore_code_value:
             print("Operation cancelled.")
@@ -669,7 +778,7 @@ def ui_restore_from_backup(user):
         print(f"\nRestore code accepted for backup file: {backup_file}")
         time.sleep(1)
 
-    elif user.role == 'SuperAdmin':
+    elif user.role == 'superadmin':
         backups = services.list_backups(user)
         if not backups:
             print("No backup files found.")
@@ -763,3 +872,35 @@ def ui_generate_restore_code(user):
         print("\nFailed to generate restore code. Please check the logs.")
 
     input("\nPress Enter to return to the menu...")
+
+def ui_remove_restore_code(user):
+    """UI flow for a SuperAdmin to remove an existing restore code assigned to a specific system admin."""
+    display_header("Remove Restore Code")
+
+    # Step 1: Select a System Administrator
+    selected_admin = _search_and_select_item(
+        search_prompt="Enter username or name of System Admin to remove code from",
+        search_function=services.find_system_admins,
+        current_user=user,
+        result_formatter=lambda r: {'display': f"{r['name']} ({r['username']})", 'id': r['id']},
+        selection_prompt="Select a System Administrator:",
+        no_results_message="\nNo System Admins found matching '{query}'."
+    )
+
+    if not selected_admin:
+        print("Operation cancelled.")
+        input("\nPress Enter...")
+        return
+
+    admin_id = selected_admin['id']
+
+    # Step 2: Remove the restore code
+    print(f"\nRemoving restore code for {selected_admin['display']}...")
+    success = services.remove_restore_code(system_admin_id=admin_id, current_user=user)
+    if success:
+        print("\nRestore code has been successfully removed.")
+    else:
+        print("\nFailed to remove restore code. Please check the logs.")
+
+    input("\nPress Enter to return to the menu...")
+

@@ -89,8 +89,8 @@ def ui_search_travellers(user):
     display_header("Search for Traveller")
 
     selected = _search_and_select_item(
-        search_prompt="Enter a first or last name to search for",
-        search_function=services.search_travellers_by_name,
+        search_prompt="Enter a first name, surname or ID to search for",
+        search_function=services.search_travellers_by_name_or_id,
         current_user=user,
         result_formatter=lambda r: {
             'display': f"{r['first_name']} {r['last_name']} (License: {r['driving_license_number']})",
@@ -121,7 +121,7 @@ def ui_update_traveller(user):
 
     selected = _search_and_select_item(
         search_prompt="Enter a name to search for the traveller to update",
-        search_function=services.search_travellers_by_name,
+        search_function=services.search_travellers_by_name_or_id,
         current_user=user,
         result_formatter=lambda r: {'display': f"{r['first_name']} {r['last_name']}", 'id': r['customer_id']},
         selection_prompt="Select a traveller to update:",
@@ -201,7 +201,7 @@ def ui_delete_traveller(user):
 
     selected = _search_and_select_item(
         search_prompt="Enter a name to search for the traveller to delete",
-        search_function=services.search_travellers_by_name,
+        search_function=services.search_travellers_by_name_or_id,
         current_user=user,
         result_formatter=lambda r: {'display': f"{r['first_name']} {r['last_name']}", 'id': r['customer_id']},
         selection_prompt="Select a traveller to DELETE:",

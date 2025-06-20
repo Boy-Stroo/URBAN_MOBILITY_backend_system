@@ -41,13 +41,13 @@ def add_new_traveller(data, current_user):
         return None
 
 
-def search_travellers_by_name(name_query, current_user):
+def search_travellers_by_name_or_id(traveller_query, current_user):
     """Searches for travellers and logs the action."""
     if not authorization.has_permission(current_user.role, 'search_travellers'):
         print("Error: Permission denied.")
         return []
-    da.add_log_entry(current_user.username, "SEARCH_TRAVELLER", f"Searched for: '{name_query}'")
-    return da.search_travellers_by_name(name_query)
+    da.add_log_entry(current_user.username, "SEARCH_TRAVELLER", f"Searched for: '{traveller_query}'")
+    return da.search_travellers_by_name_or_id(traveller_query)
 
 
 def get_traveller_details(traveller_id, current_user):

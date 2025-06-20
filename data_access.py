@@ -2,7 +2,7 @@ import sqlite3
 from contextlib import contextmanager
 import database
 import uuid
-from models import User, Traveller, Scooter, UserProfile, RestoreCode
+from models import Traveller, Scooter, UserProfile, RestoreCode # , User
 from security import SecurityManager
 
 
@@ -333,17 +333,19 @@ class DataAccess:
             print("Error: A traveller with this email address may already exist.")
             return None
 
-    def search_travellers_by_name(self, name_query):
+    def search_travellers_by_name_or_id(self, traveller_query):
         """Searches for travellers by first or last name using in-memory decrypted data."""
         results = []
-        name_query = name_query.lower()  # Case-insensitive search
+        traveller_query = traveller_query.lower()  # Case-insensitive search
 
 
         # Search in the in-memory decrypted data
         for traveller in self.in_memory_data['travellers']:
             # Check if the query matches any of the name fields
-            if (name_query in traveller['first_name'].lower() or
-                    name_query in traveller['last_name'].lower()):
+            if (traveller_query in traveller['first_name'].lower() or
+                    traveller_query in traveller['last_name'].lower() or
+                    traveller_query in traveller['customer_id'].lower()
+            ):
                 # Add only the required fields to the results
                 results.append({
                     'customer_id': traveller['customer_id'],
@@ -358,9 +360,8 @@ class DataAccess:
         """Fetches a single, fully-decrypted traveller record by their ID using in-memory data."""
         # Search for the traveller in the in-memory data
         for traveller in self.in_memory_data['travellers']:
-            if traveller['customer_id'] == traveller_id:
+            if traveller_id in traveller['customer_id']:
                 return Traveller(**traveller)
-
         return None
 
     def update_traveller(self, traveller: Traveller):

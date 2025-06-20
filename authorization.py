@@ -33,7 +33,6 @@ PERMISSIONS = {
     }
 }
 
-
 # --- Main Authorization Function ---
 
 def has_permission(user_role, required_permission):

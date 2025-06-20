@@ -20,27 +20,49 @@ def _find_user_in_args(*args, **kwargs):
 
 
 def _extract_log_details(func, result, *args, **kwargs):
-    """
-    Intelligently extracts relevant details for logging based on the function's
-    signature and arguments, avoiding sensitive data.
-    """
     details = {}
 
-    # Bind the arguments to the function signature to get their names
     try:
         bound_args = inspect.signature(func).bind_partial(*args, **kwargs)
         bound_args.apply_defaults()
     except TypeError:
-        # Fallback if binding fails
         bound_args = {'arguments': kwargs}
 
-    # Whitelist of safe, common identifiers to log
-    id_keys = ['user_id', 'traveller_id', 'scooter_id', 'profile_id', 'system_admin_id', 'backup_file']
+    id_keys = [
+        'user_id', 'traveller_id', 'scooter_id', 'profile_id', 'system_admin_id', 'backup_file',
+        'username', 'first_name', 'last_name', 'city', 'email_address', 'mobile_phone'
+    ]
+
     for key, value in bound_args.arguments.items():
         if key in id_keys:
             details['target_id' if 'id' in key else key] = value
 
-    # For creation events, the result is the new ID.
+    # Extra per functie
+    func_name = func.__name__
+    if func_name == 'add_new_traveller':
+        traveller_data = kwargs.get('data', {})
+        details.update({
+            'first_name': traveller_data.get('first_name'),
+            'last_name': traveller_data.get('last_name'),
+            'email': traveller_data.get('email_address'),
+        })
+    elif func_name == 'add_new_service_engineer':
+        details.update({
+            'username': kwargs.get('username'),
+            'first_name': kwargs.get('first_name'),
+            'last_name': kwargs.get('last_name'),
+        })
+    elif func_name == 'delete_traveller_record':
+        details['deleted_traveller_id'] = kwargs.get('traveller_id')
+    elif func_name == 'update_traveller_details':
+        traveller = kwargs.get('traveller_obj') or args[0] if args else None
+        if traveller:
+            details.update({
+                'traveller_id': getattr(traveller, 'traveller_id', None),
+                'email': getattr(traveller, 'email_address', None),
+            })
+
+    # New record ID
     if "ADD" in func.__name__.upper() and isinstance(result, int):
         details['new_record_id'] = result
 

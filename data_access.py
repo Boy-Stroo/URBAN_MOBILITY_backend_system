@@ -708,17 +708,43 @@ class DataAccess:
 
         return None
 
-    def get_restore_codes_by_system_admin(self, system_admin_id):
-        """Retrieves all restore codes for a specific system administrator using in-memory decrypted data."""
-        codes = []
+    def delete_restore_codes_by_system_admin(self, system_admin_id):
+        """
+        Deletes all restore codes associated with a specific System Admin ID.
 
-        # Search for restore codes in the in-memory data
+        Args:
+            system_admin_id (int): The ID of the system admin whose restore codes should be deleted.
+
+        Returns:
+            bool: True if the operation was successful, False otherwise.
+        """
+        try:
+            query = "DELETE FROM RestoreCodes WHERE system_admin_id = ?"
+            params = (system_admin_id,)
+            with self.db_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute(query, params)
+                conn.commit()
+            return True
+        except Exception as e:
+            print(f"An error occurred while deleting restore codes: {e}")
+            return False
+
+    def get_restore_codes_by_system_admin(self, system_admin_id):
+        """
+        Retrieves all restore codes associated with a specific System Admin ID.
+
+        Args:
+            system_admin_id (int): The ID of the system admin whose restore codes should be retrieved.
+
+        Returns:
+            list: A list of RestoreCode objects associated with the specified system admin.
+        """
+        restore_codes = []
         for code in self.in_memory_data['restore_codes']:
             if code['system_admin_id'] == system_admin_id:
-                id_to_remove = code['code_id']
-                codes.append(RestoreCode(**code))
-
-        return codes
+                restore_codes.append(RestoreCode(**code))
+        return restore_codes
 
     def update_restore_code_status(self, code_id, new_status):
         """Updates the status of a restore code (e.g., to 'used')."""

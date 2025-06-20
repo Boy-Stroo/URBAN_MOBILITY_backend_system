@@ -473,13 +473,15 @@ def generate_restore_code(system_admin_id, backup_filename, current_user):
     return None
 
 
-@audit_activity("GET_RESTORE_CODES", "Got al restore codes for System Admin ID: {system_admin_id}",
+@audit_activity("GET_RESTORE_CODES", "Got all restore codes for System Admin ID: {system_admin_id}",
                 "Failed to get restore codes.")
+# In services.py (or wherever remove_restore_code is defined)
 def remove_restore_code(system_admin_id, current_user):
-    """Retrieves all restore codes for a specific System Admin."""
-    if authorization.has_permission(current_user.role, 'generate_restore_code') is True:
-        return da.get_restore_codes_by_system_admin(system_admin_id)
-
+    if authorization.has_permission(current_user.role, 'generate_restore_code'):
+        existing_codes = da.get_restore_codes_by_system_admin(system_admin_id)
+        if not existing_codes:
+            return "not_found"
+        return da.delete_restore_codes_by_system_admin(system_admin_id)
     print("Error: Permission denied.")
     return False
 

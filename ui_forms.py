@@ -896,9 +896,11 @@ def ui_remove_restore_code(user):
 
     # Step 2: Remove the restore code
     print(f"\nRemoving restore code for {selected_admin['display']}...")
-    success = services.remove_restore_code(system_admin_id=admin_id, current_user=user)
-    if success:
+    result = services.remove_restore_code(system_admin_id=admin_id, current_user=user)
+    if result is True:
         print("\nRestore code has been successfully removed.")
+    elif result == "not_found":
+        print("\nThere are no restore codes for that user.")
     else:
         print("\nFailed to remove restore code. Please check the logs.")
 

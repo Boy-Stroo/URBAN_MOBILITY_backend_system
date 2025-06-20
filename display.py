@@ -1,9 +1,6 @@
 import time
 from datetime import datetime, timedelta
 
-# --- Centralized Table Styles ---
-# We can define different styles here and reuse them across the application.
-# Common tablefmt options: 'grid', 'fancy_grid', 'pipe', 'orgtbl', 'rst', 'psql', 'simple', 'html'
 TABLE_STYLES = {
     "default": "grid",
     "compact": "pipe",
@@ -11,14 +8,6 @@ TABLE_STYLES = {
 }
 
 def display_search_results_table(items, display_key):
-    """
-    Displays a list of items in a table format and returns the selected item.
-
-    :param items: List of dictionaries containing the items to display
-    :param display_key: The key in each item dictionary that contains the display text
-    :param headers: Optional list of column headers
-    :return: The selected item or None if cancelled
-    """
     print("Displaying search results")
     for index, item in enumerate(items):
         display_text = item.get(display_key, "N/A")
@@ -32,9 +21,6 @@ def display_search_results_table(items, display_key):
             return items[choice_index]
         elif choice_index == -1:
             return None
-
-
-
 
 
 def display_system_logs_paginated(logs):
@@ -75,9 +61,6 @@ def display_system_logs_paginated(logs):
                 suspicious_flag
             ])
 
-        # print(tabulate(table_data, headers=headers, tablefmt=TABLE_STYLES["detailed"]))
-
-        # Without tabulate for simplicity in this example
         print("=" * 174)
         print(f"| {'Time':<30} | {'User':<15} | {'Event':<20} | {'Description':<50} | {'Details':<30} | {'Suspicious':<10} |")
         print("=" * 174)
@@ -107,15 +90,10 @@ def display_system_logs_paginated(logs):
             print("Invalid option.")
             time.sleep(1)
 
-
-# --- Main block for testing display functions ---
 if __name__ == '__main__':
-    # This block will only run when you execute `python display.py` directly.
-    # It's useful for testing the look and feel of tables.
 
     print("--- Testing Display Module ---")
 
-    # Example data for testing
     example_items = [
         {"id": 1, "name": "Item One", "value": 100},
         {"id": 2, "name": "Item Two", "value": 200},
@@ -127,7 +105,6 @@ if __name__ == '__main__':
         print(f"Selected Item: {selected_item}")
     else:
         print("No item selected.")
-    # Example logs for testing pagination
     example_logs = [
         {
             "timestamp": datetime.now() - timedelta(days=i),
@@ -135,8 +112,8 @@ if __name__ == '__main__':
             "event_type": "Event Type",
             "description": f"Description of event {i}",
             "additional_info": f"Details for event {i}",
-            "is_suspicious": i % 2 == 0  # Even indexed logs are suspicious
-        } for i in range(25)  # Create 25 log entries for testing
+            "is_suspicious": i % 2 == 0
+        } for i in range(25)
     ]
     display_system_logs_paginated(example_logs)
     print("--- End of Display Module Test ---")

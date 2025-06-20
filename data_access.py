@@ -5,30 +5,21 @@ import uuid
 from models import Traveller, Scooter, UserProfile, RestoreCode # , User
 from security import SecurityManager
 
-
 class DataAccess:
-    """
-    Data access layer with encrypted database storage and in-memory decrypted data cache.
-    """
     _instance = None
     _initialized = False
 
     def __new__(cls):
-        """Singleton pattern: return the same instance if it already exists."""
         if cls._instance is None:
             cls._instance = super(DataAccess, cls).__new__(cls)
         return cls._instance
 
     def __init__(self):
-        """Initialize the DataAccess instance with security manager and load data to memory."""
-        # Only initialize once
         if DataAccess._initialized:
             return
 
-        # Instantiate the security manager to use its encryption/hashing methods
         self.security = SecurityManager()
 
-        # In-memory database for decrypted data
         self.in_memory_data = {
             'users': [],
             'user_profiles': [],
@@ -38,15 +29,12 @@ class DataAccess:
             'logs': []
         }
 
-        # Load all data to memory upon instantiation
         self.load_all_data_to_memory()
 
-        # Mark as initialized
         DataAccess._initialized = True
 
     @contextmanager
     def db_connection(self):
-        """A context manager to simplify database connection and transactions."""
         conn = database.connect_db()
         if conn is None:
             raise ConnectionError("Failed to connect to the database.")
@@ -62,7 +50,6 @@ class DataAccess:
                 conn.close()
 
     def encrypt_value(self, value):
-        """Encrypts a value, handling different data types."""
         if value is None:
             return None
         if isinstance(value, (int, float, bool)):
@@ -70,7 +57,6 @@ class DataAccess:
         return self.security.encrypt_data(value)
 
     def decrypt_value(self, value):
-        """Decrypts a value, handling different data types."""
         if value is None:
             return None
         decrypted = self.security.decrypt_data(value)
@@ -79,8 +65,7 @@ class DataAccess:
         return decrypted
 
     def load_all_data_to_memory(self):
-        """Loads all data from the database, decrypts it, and stores it in memory."""
-        # Clear existing in-memory data
+
         self.in_memory_data = {
             'users': [],
             'user_profiles': [],
@@ -90,12 +75,10 @@ class DataAccess:
             'logs': []
         }
 
-        # Load and decrypt users
         with self.db_connection() as conn:
             conn.row_factory = sqlite3.Row
             cursor = conn.cursor()
 
-            # Load Users
             cursor.execute("SELECT * FROM Users")
             for row in cursor.fetchall():
                 user_data = dict(row)
@@ -105,7 +88,6 @@ class DataAccess:
                 user_data['is_active'] = self.decrypt_value(user_data['is_active'])
                 self.in_memory_data['users'].append(user_data)
 
-            # Load UserProfiles
             cursor.execute("SELECT * FROM UserProfiles")
             for row in cursor.fetchall():
                 profile_data = dict(row)
@@ -114,7 +96,6 @@ class DataAccess:
                 profile_data['registration_date'] = self.decrypt_value(profile_data['registration_date'])
                 self.in_memory_data['user_profiles'].append(profile_data)
 
-            # Load Travellers
             cursor.execute("SELECT * FROM Travellers")
             for row in cursor.fetchall():
                 traveller_data = dict(row)
@@ -125,7 +106,6 @@ class DataAccess:
 
                 self.in_memory_data['travellers'].append(traveller_data)
 
-            # Load Scooters
             cursor.execute("SELECT * FROM Scooters")
             for row in cursor.fetchall():
                 scooter_data = dict(row)
@@ -134,7 +114,6 @@ class DataAccess:
                         scooter_data[key] = self.decrypt_value(scooter_data[key])
                 self.in_memory_data['scooters'].append(scooter_data)
 
-            # Load RestoreCodes
             cursor.execute("SELECT * FROM RestoreCodes")
             for row in cursor.fetchall():
                 code_data = dict(row)
@@ -143,7 +122,6 @@ class DataAccess:
                         code_data[key] = self.decrypt_value(code_data[key])
                 self.in_memory_data['restore_codes'].append(code_data)
 
-            # Load Logs
             cursor.execute("SELECT * FROM Logs")
             for row in cursor.fetchall():
                 log_data = dict(row)
@@ -154,7 +132,6 @@ class DataAccess:
 
         return self.in_memory_data
 
-    # --- User and Profile Data Access ---
     def add_user(self, username, password, role):
         """Adds a new user to the database with an encrypted username and hashed password."""
         user_id = str(uuid.uuid4())
@@ -169,7 +146,6 @@ class DataAccess:
             with self.db_connection() as conn:
                 cursor = conn.cursor()
                 cursor.execute(sql, (user_id, encrypted_username, encrypted_password, encrypted_role, encrypted_is_active))
-                # Refresh in-memory data after successful insert
                 self.load_all_data_to_memory()
                 return user_id
         except sqlite3.IntegrityError:
@@ -177,19 +153,15 @@ class DataAccess:
             return None
 
     def find_user_by_username(self, username):
-        """Finds a user by their plaintext username using in-memory decrypted data."""
-
-        # Search for the user in the in-memory data
-        username = username.lower()  # Case-insensitive search
+        username = username.lower()
         for user in self.in_memory_data['users']:
             if user['username'] and user['username'].lower() == username:
-                if user['is_active'] == '1':  # Check if user is active
+                if user['is_active'] == '1':
                     return (user['user_id'], user['password_hash'], user['role'])
 
         return None
 
     def get_user_hash_by_id(self, user_id):
-        """Fetches just the password hash for a given user ID."""
         sql = "SELECT password_hash FROM Users WHERE user_id = ? AND is_active = 1"
         try:
             with self.db_connection() as conn:
@@ -202,7 +174,6 @@ class DataAccess:
             return None
 
     def update_user_password(self, user_id, new_password_hash):
-        """Updates the password hash for a specific user."""
         sql = "UPDATE Users SET password_hash = ? WHERE user_id = ?"
         try:
             with self.db_connection() as conn:
@@ -215,7 +186,6 @@ class DataAccess:
             return False
 
     def add_user_profile(self, user_id, first_name, last_name, registration_date):
-        """Adds a profile for a given user."""
         profile_id = str(uuid.uuid4())
         sql = "INSERT INTO UserProfiles(profile_id, user_id, first_name, last_name, registration_date) VALUES (?, ?, ?, ?, ?)"
         encrypted_first_name = self.security.encrypt_data(first_name)
@@ -230,8 +200,6 @@ class DataAccess:
             return None
 
     def get_user_profile_by_user_id(self, user_id):
-        """Fetches a UserProfile object by the user's ID using in-memory decrypted data."""
-        # Search for the user profile in the in-memory data
         username = ""
         print("My user_id:", user_id)
         for user in self.in_memory_data['users']:
@@ -240,14 +208,11 @@ class DataAccess:
         for profile in self.in_memory_data['user_profiles']:
             print("Checking profile:", profile)
             if profile['user_id'] == user_id:
-                return UserProfile(**profile)
-
-
+                return UserProfile(**profile), username
 
         return None
 
     def update_user_profile(self, user_id, first_name, last_name):
-        """Updates an existing user's profile."""
         sql = "UPDATE UserProfiles SET first_name = ?, last_name = ? WHERE user_id = ?"
         encrypted_first_name = self.security.encrypt_data(first_name)
         encrypted_last_name = self.security.encrypt_data(last_name)
@@ -262,20 +227,16 @@ class DataAccess:
             return False
 
     def get_all_users_by_role(self, role_to_find):
-        """Fetches all active users of a specific role using in-memory decrypted data."""
         users = []
 
-        # Search for users with the specified role in the in-memory data
         for user in self.in_memory_data['users']:
             if user['role'] == role_to_find and user['is_active'] == '1':
-                # Find the corresponding user profile
                 user_profile = None
                 for profile in self.in_memory_data['user_profiles']:
                     if profile['user_id'] == user['user_id']:
                         user_profile = profile
                         break
 
-                # Add the user to the results
                 if user_profile:
                     users.append({
                         'id': user['user_id'],
@@ -286,7 +247,6 @@ class DataAccess:
         return users
 
     def delete_user_by_id(self, user_id):
-        """Deletes a user by setting their is_active flag to 0. (Soft delete)"""
         sql = "UPDATE Users SET is_active = 0 WHERE user_id = ?"
         try:
             with self.db_connection() as conn:
@@ -300,7 +260,6 @@ class DataAccess:
 
     # --- Traveller Data Access ---
     def add_traveller(self, traveller: Traveller):
-        """Adds a new traveller to the database, encrypting sensitive fields."""
         customer_id = str(uuid.uuid4())
         sql = """INSERT INTO Travellers(customer_id, first_name, last_name, birthday, gender, street_name, house_number, zip_code, city, email_address, mobile_phone, driving_license_number, registration_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
         try:
@@ -333,19 +292,14 @@ class DataAccess:
             return None
 
     def search_travellers_by_name_or_id(self, traveller_query):
-        """Searches for travellers by first or last name using in-memory decrypted data."""
         results = []
         traveller_query = traveller_query.lower()  # Case-insensitive search
 
-
-        # Search in the in-memory decrypted data
         for traveller in self.in_memory_data['travellers']:
-            # Check if the query matches any of the name fields
             if (traveller_query in traveller['first_name'].lower() or
                     traveller_query in traveller['last_name'].lower() or
                     traveller_query in traveller['customer_id'].lower()
             ):
-                # Add only the required fields to the results
                 results.append({
                     'customer_id': traveller['customer_id'],
                     'first_name': traveller['first_name'],
@@ -356,15 +310,12 @@ class DataAccess:
         return results
 
     def get_traveller_by_id(self, traveller_id):
-        """Fetches a single, fully-decrypted traveller record by their ID using in-memory data."""
-        # Search for the traveller in the in-memory data
         for traveller in self.in_memory_data['travellers']:
             if traveller_id in traveller['customer_id']:
                 return Traveller(**traveller)
         return None
 
     def update_traveller(self, traveller: Traveller):
-        """Updates an existing traveller record in the database, encrypting sensitive fields."""
         sql = """UPDATE Travellers SET
                     first_name = ?, last_name = ?, birthday = ?, gender = ?,
                     street_name = ?, house_number = ?, zip_code = ?, city = ?,
@@ -402,7 +353,6 @@ class DataAccess:
             return False
 
     def delete_traveller_by_id(self, traveller_id):
-        """Permanently deletes a traveller from the database."""
         sql = "DELETE FROM Travellers WHERE customer_id = ?"
         try:
             with self.db_connection() as conn:
@@ -417,7 +367,6 @@ class DataAccess:
 
     # --- Scooter Data Access ---
     def add_scooter(self, scooter: Scooter):
-        """Adds a new scooter to the database, encrypting all fields."""
         scooter_id = str(uuid.uuid4())
         sql = """INSERT INTO Scooters(scooter_id, brand, model, serial_number, top_speed_kmh, battery_capacity_wh, soc_percentage, target_soc_min, target_soc_max, location_latitude, location_longitude, out_of_service, mileage_km, last_maintenance_date, in_service_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
         try:
@@ -467,17 +416,13 @@ class DataAccess:
             return None
 
     def search_scooters(self, query):
-        """Searches for scooters by brand, model, or serial number using in-memory decrypted data."""
         results = []
-        query = query.lower()  # Case-insensitive search
+        query = query.lower()
 
-        # Search in the in-memory decrypted data
         for scooter in self.in_memory_data['scooters']:
-            # Check if the query matches any of the search fields
             if (query in str(scooter['brand']).lower() or
                     query in str(scooter['model']).lower() or
                     query in str(scooter['serial_number']).lower()):
-                # Add only the required fields to the results
                 results.append({
                     'scooter_id': scooter['scooter_id'],
                     'brand': scooter['brand'],
@@ -489,11 +434,8 @@ class DataAccess:
         return results
 
     def get_scooter_by_id(self, scooter_id):
-        """Fetches a single scooter record by its ID using in-memory decrypted data."""
-        # Search for the scooter in the in-memory data
         for scooter in self.in_memory_data['scooters']:
             if scooter['scooter_id'] == scooter_id:
-                # Convert numeric string values to appropriate types for the Scooter model
                 try:
                     scooter_data = {
                         'scooter_id': scooter['scooter_id'],
@@ -523,7 +465,6 @@ class DataAccess:
         return None
 
     def update_scooter(self, scooter: Scooter):
-        """Updates an existing scooter record in the database, encrypting all fields."""
         sql = """UPDATE Scooters SET
                     brand = ?, model = ?, serial_number = ?, top_speed_kmh = ?,
                     battery_capacity_wh = ?, soc_percentage = ?, target_soc_min = ?,
@@ -534,7 +475,6 @@ class DataAccess:
             with self.db_connection() as conn:
                 cursor = conn.cursor()
 
-                # Encrypt all fields
                 encrypted_data = {
                     'brand': self.encrypt_value(scooter.brand),
                     'model': self.encrypt_value(scooter.model),
@@ -577,7 +517,6 @@ class DataAccess:
             return False
 
     def delete_scooter_by_id(self, scooter_id):
-        """Permanently deletes a scooter from the database."""
         sql = "DELETE FROM Scooters WHERE scooter_id = ?"
         try:
             with self.db_connection() as conn:
@@ -592,12 +531,10 @@ class DataAccess:
 
     # --- Log Data Access ---
     def add_log_entry(self, username, event_type, description, additional_info="", is_suspicious=0):
-        """Adds a new, encrypted entry to the Logs table."""
         from datetime import datetime
         log_id = str(uuid.uuid4())
         timestamp = datetime.now().isoformat()
 
-        # Encrypt all fields
         encrypted_data = {
             'timestamp': self.encrypt_value(timestamp),
             'username': self.encrypt_value(username),
@@ -627,14 +564,10 @@ class DataAccess:
             return None
 
     def get_all_logs(self):
-        """Retrieves all logs using in-memory decrypted data, ordered by most recent first."""
-        # Sort logs by timestamp in descending order (most recent first)
         sorted_logs = sorted(self.in_memory_data['logs'], key=lambda x: x['timestamp'], reverse=True)
         return sorted_logs
 
     def get_unread_suspicious_logs_count(self):
-        """Counts the number of unread suspicious logs using in-memory decrypted data."""
-        # Count suspicious and unread logs in memory
         count = 0
         for log in self.in_memory_data['logs']:
             if log['is_suspicious'] == '1' and log['is_read'] == '0':
@@ -643,17 +576,14 @@ class DataAccess:
         return count
 
     def mark_all_logs_as_read(self):
-        """Marks all log entries as read."""
         sql = "UPDATE Logs SET is_read = ? WHERE is_read = ?"
         try:
             with self.db_connection() as conn:
                 cursor = conn.cursor()
-                # Encrypt the values for is_read
                 encrypted_read = self.encrypt_value(1)
                 encrypted_unread = self.encrypt_value(0)
                 cursor.execute(sql, (encrypted_read, encrypted_unread))
 
-                # Refresh in-memory data
                 if cursor.rowcount > 0:
                     self.load_all_data_to_memory()
 
@@ -662,9 +592,7 @@ class DataAccess:
             print(f"An error occurred while marking logs as read: {e}")
             return False
 
-    # --- Restore Code Data Access ---
     def add_restore_code(self, code: RestoreCode):
-        """Saves a new restore code to the database, encrypting all fields."""
         code_id = str(uuid.uuid4())
         sql = """INSERT INTO RestoreCodes (code_id, restore_code, backup_filename, system_admin_id, status, generated_at, expires_at)
                  VALUES (?, ?, ?, ?, ?, ?, ?)"""
@@ -672,7 +600,6 @@ class DataAccess:
             with self.db_connection() as conn:
                 cursor = conn.cursor()
 
-                # Encrypt all fields
                 encrypted_data = {
                     'restore_code': self.encrypt_value(code.restore_code),
                     'backup_filename': self.encrypt_value(code.backup_filename),
@@ -699,8 +626,6 @@ class DataAccess:
             return None
 
     def get_restore_code(self, code_value):
-        """Retrieves a restore code from the database by its value using in-memory decrypted data."""
-        # Search for the restore code in the in-memory data
         for code in self.in_memory_data['restore_codes']:
             if code['restore_code'] == code_value:
                 return RestoreCode(**code)
@@ -708,15 +633,6 @@ class DataAccess:
         return None
 
     def delete_restore_codes_by_system_admin(self, system_admin_id):
-        """
-        Deletes all restore codes associated with a specific System Admin ID.
-
-        Args:
-            system_admin_id (int): The ID of the system admin whose restore codes should be deleted.
-
-        Returns:
-            bool: True if the operation was successful, False otherwise.
-        """
         try:
             query = "DELETE FROM RestoreCodes WHERE system_admin_id = ?"
             params = (system_admin_id,)
@@ -730,15 +646,6 @@ class DataAccess:
             return False
 
     def get_restore_codes_by_system_admin(self, system_admin_id):
-        """
-        Retrieves all restore codes associated with a specific System Admin ID.
-
-        Args:
-            system_admin_id (int): The ID of the system admin whose restore codes should be retrieved.
-
-        Returns:
-            list: A list of RestoreCode objects associated with the specified system admin.
-        """
         restore_codes = []
         for code in self.in_memory_data['restore_codes']:
             if code['system_admin_id'] == system_admin_id:
@@ -746,16 +653,13 @@ class DataAccess:
         return restore_codes
 
     def update_restore_code_status(self, code_id, new_status):
-        """Updates the status of a restore code (e.g., to 'used')."""
         sql = "UPDATE RestoreCodes SET status = ? WHERE code_id = ?"
         try:
             with self.db_connection() as conn:
                 cursor = conn.cursor()
-                # Encrypt the new status
                 encrypted_status = self.encrypt_value(new_status)
                 cursor.execute(sql, (encrypted_status, code_id))
 
-                # Refresh in-memory data
                 if cursor.rowcount > 0:
                     self.load_all_data_to_memory()
 
@@ -765,7 +669,6 @@ class DataAccess:
             return False
 
     def delete_restore_code(self, code_id):
-        """Deletes a restore code from the database."""
         sql = "DELETE FROM RestoreCodes WHERE code_id = ?"
         try:
             with self.db_connection() as conn:
@@ -779,12 +682,7 @@ class DataAccess:
             return False
 
 if __name__ == "__main__":
-    # This block is for testing the data access functions directly.
-    # You can run this script to see if the database operations work as expected.
     print("Testing data access functions...")
 
-    # Example: Create a DataAccess instance and add a user
     data_access = DataAccess()
     user_id = data_access.add_user("testuser", "securepassword", "ServiceEngineer")
-    # if user_id:
-    #     print(f"User added with ID: {user_id}")

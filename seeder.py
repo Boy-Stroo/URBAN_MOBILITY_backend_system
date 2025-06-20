@@ -5,25 +5,16 @@ from models import User
 
 
 def seed_database():
-    """
-    Populates the database with some initial sample data for Travellers and Scooters.
-    This function should be run once, after the initial setup.
-    """
     print("--- Starting Database Seeding ---")
 
-    # We need a user object to pass to the service functions for auditing purposes.
-    # Since this is a system script, we can use a placeholder user.
-    # We'll use the superadmin user for this, assuming it exists.
     seeder_user = User(user_id=1, username='super_admin', role='superadmin')
 
-    # --- Seed Scooters ---
     print("\n[1/2] Seeding Scooters...")
     scooters_to_add = [
         {
             'scooter_id': None, 'brand': 'Segway', 'model': 'Ninebot G30', 'serial_number': 'SNX987654321',
             'top_speed_kmh': 25, 'battery_capacity_wh': 551, 'soc_percentage': 88.5,
             'target_soc_min': 20.0, 'target_soc_max': 95.0, 'location_latitude': 51.9178, 'location_longitude': 4.5608,
-            # Schiedam Centrum
             'out_of_service': False, 'mileage_km': 1204.5, 'last_maintenance_date': '2025-05-20',
             'in_service_date': datetime.now()
         },
@@ -31,7 +22,6 @@ def seed_database():
             'scooter_id': None, 'brand': 'NIU', 'model': 'KQi3 Max', 'serial_number': 'NIU123456789',
             'top_speed_kmh': 25, 'battery_capacity_wh': 608, 'soc_percentage': 99.0,
             'target_soc_min': 20.0, 'target_soc_max': 95.0, 'location_latitude': 51.9225, 'location_longitude': 4.47917,
-            # Rotterdam Centraal
             'out_of_service': False, 'mileage_km': 850.2, 'last_maintenance_date': '2025-04-15',
             'in_service_date': datetime.now()
         },
@@ -39,7 +29,6 @@ def seed_database():
             'scooter_id': None, 'brand': 'Tier', 'model': 'Six', 'serial_number': 'TIER998877665',
             'top_speed_kmh': 20, 'battery_capacity_wh': 500, 'soc_percentage': 15.0,
             'target_soc_min': 20.0, 'target_soc_max': 95.0, 'location_latitude': 51.9149, 'location_longitude': 4.4734,
-            # Blaak, Rotterdam
             'out_of_service': True, 'mileage_km': 2530.0, 'last_maintenance_date': '2025-01-10',
             'in_service_date': datetime.now()
         },
@@ -51,7 +40,6 @@ def seed_database():
 
     print("Scooter seeding complete.")
 
-    # --- Seed Travellers ---
     print("\n[2/2] Seeding Travellers...")
     travellers_to_add = [
         {
@@ -84,9 +72,7 @@ def seed_database():
 
 
 if __name__ == '__main__':
-    # First, ensure the database and its tables exist.
     print("Initializing database...")
     database.initialize_database()
 
-    # Then, run the seeder.
     seed_database()

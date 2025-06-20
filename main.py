@@ -8,13 +8,7 @@ from models import User
 from ui_utils import display_header, get_input, get_password_input, clear_screen
 from auditing import audit_activity
 
-
-# --- Core Application Logic / Services ---
-
 class AuthenticationService:
-    """Handles the business logic for user authentication."""
-
-    # Track failed login attempts by username
     failed_attempts = {}
 
     da = data_access.DataAccess()
@@ -23,7 +17,6 @@ class AuthenticationService:
         self.security = SecurityManager()
 
     def _check_for_sql_injection(self, input_str):
-        """Check for potential SQL injection patterns in input"""
         sql_patterns = [
             "SELECT", "INSERT", "UPDATE", "DELETE", "DROP", "UNION", 
             "OR 1=1", "' OR '", "\" OR \"", "--", "/*", "*/", ";"
@@ -35,11 +28,9 @@ class AuthenticationService:
         return False
 
     def _check_for_null_bytes(self, input_str):
-        """Check for null bytes in input string"""
         return '\0' in input_str
 
     def _track_failed_attempt(self, username):
-        """Track failed login attempts for a username"""
         if username in self.failed_attempts:
             self.failed_attempts[username] += 1
         else:
@@ -47,17 +38,12 @@ class AuthenticationService:
         return self.failed_attempts[username]
 
     def _reset_failed_attempts(self, username):
-        """Reset failed attempts counter after successful login"""
         if username in self.failed_attempts:
             del self.failed_attempts[username]
 
     @audit_activity("LOGIN", "User '{username}' logged in successfully.",
                    "Failed login attempt for username: '{username}'.", suspicious_on_fail=True)
     def login(self, username, password):
-        """
-        Attempts to log a user in. The 'username' kwarg is used by the decorator.
-        """
-        # Check for SQL injection and null bytes
         if self._check_for_sql_injection(username) or self._check_for_sql_injection(password):
             print("Error: Invalid input detected.")
             self.da.add_log_entry(
@@ -86,7 +72,6 @@ class AuthenticationService:
                 self._reset_failed_attempts(username)
                 return User(user_id=user_id, username=username, role=role)
 
-        # Track and handle failed login attempts
         attempts = self._track_failed_attempt(username)
         if attempts >= 3:
             self.da.add_log_entry(
@@ -95,16 +80,13 @@ class AuthenticationService:
                 description=f"Multiple failed login attempts ({attempts}) for username: '{username}'",
                 is_suspicious=1
             )
+            print(f"Error: Too many failed login attempts.")
             sys.exit()
 
         print("Error: Invalid username or password.")
         return None
 
-
-# --- The UI and Main Application Class ---
-
 class ConsoleMenu:
-    """A class to represent and manage a single console menu."""
 
     def __init__(self, title, subtitle="Please choose an option:"):
         self.title = title
@@ -112,12 +94,10 @@ class ConsoleMenu:
         self.menu_options = {}
 
     def add_option(self, key, description, function):
-        """Adds a menu option."""
         self.menu_options[key.upper()] = {'desc': description, 'func': function}
         print(f"Added option [{key.upper()}]: {description}")
 
     def display(self):
-        """Displays the menu, prompts for user selection, and handles menu flow."""
         while True:
             display_header(self.title)
             print(self.subtitle)
@@ -133,14 +113,13 @@ class ConsoleMenu:
                     return
                 result = func()
                 if result in ['EXIT_MENU', 'EXIT_APP']:
-                    return result  # Pass the signal up the call stack
+                    return result
             else:
                 print("Invalid option. Please try again.")
                 time.sleep(1)
 
 
 class UrbanMobilityApp:
-    """The main application controller."""
     da = data_access.DataAccess()
 
     def __init__(self):
@@ -149,7 +128,6 @@ class UrbanMobilityApp:
         self.auth_service = AuthenticationService()
 
     def main_menu(self):
-        """Displays the main menu based on the user's role."""
         if not self.current_user:
             self.show_login_screen()
             return
@@ -169,9 +147,10 @@ class UrbanMobilityApp:
                 main_menu.add_option('1', "Manage Traveller Accounts", self.traveller_management_menu)
                 main_menu.add_option('2', "Manage Service Engineer Accounts", self.service_engineer_management_menu)
                 main_menu.add_option('3', "Manage Scooter Fleet", self.scooter_management_menu)
-                main_menu.add_option('4', "View System Logs", lambda: ui_forms.ui_view_system_logs(self.current_user))
-                main_menu.add_option('5', "Manage Backups", self.backup_management_menu)
-                main_menu.add_option('6', "Manage My Account", self.account_management_menu)
+                main_menu.add_option('4', "Search & View System Administrators", lambda: ui_forms.ui_search_system_admins(self.current_user))
+                main_menu.add_option('5', "View System Logs", lambda: ui_forms.ui_view_system_logs(self.current_user))
+                main_menu.add_option('6', "Manage Backups", self.backup_management_menu)
+                main_menu.add_option('7', "Manage My Account", self.account_management_menu)
             case 'serviceengineer' | 'ServiceEngineer':
                 main_menu.add_option('1', "Search & View Scooter", lambda: ui_forms.ui_search_scooters(self.current_user))
                 main_menu.add_option('2', "Update Scooter Status", self.scooter_update_menu_limited)
@@ -184,7 +163,6 @@ class UrbanMobilityApp:
             self.quit()
 
     def show_login_screen(self):
-        """Handles the user login process."""
         display_header("Login")
         username = get_input("Username")
         password = get_password_input("Password")
@@ -207,7 +185,6 @@ class UrbanMobilityApp:
             time.sleep(1.5)
 
     def logout(self):
-        """Logs the current user out and returns a signal to exit the current menu."""
         if self.current_user:
             self.da.add_log_entry(self.current_user.username, "LOGOUT", "User logged out.")
             print(f"Logging out {self.current_user.username}...")
@@ -218,14 +195,12 @@ class UrbanMobilityApp:
         return 'EXIT_MENU'
 
     def quit(self):
-        """Sets the application to stop running and returns a signal to exit the current menu."""
         print("Shutting down the system. Goodbye!")
         self.is_running = False
         self.current_user = None
         return 'EXIT_MENU'
 
     def run(self):
-        """The main loop of the application."""
         while self.is_running:
             if self.current_user:
                 self.main_menu()
@@ -233,7 +208,6 @@ class UrbanMobilityApp:
                 if self.is_running:
                     self.show_login_screen()
 
-    # --- Management Sub-Menus ---
     def system_admin_management_menu(self):
         menu = ConsoleMenu("System Administrator Management")
         menu.add_option('1', "Add New System Administrator", lambda: ui_forms.ui_add_system_admin(self.current_user))
@@ -290,7 +264,6 @@ class UrbanMobilityApp:
 
         result = menu.display()
         if result == 'EXIT_APP':
-            # This is a special signal from the restore function to force a shutdown.
             self.quit()
 
     def account_management_menu(self):

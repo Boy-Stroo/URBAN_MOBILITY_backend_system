@@ -7,7 +7,6 @@ import inspect
 da = da.DataAccess()
 
 def _find_user_in_args(*args, **kwargs):
-    """A helper to find the User object in the decorated function's arguments."""
     for arg in args:
         if isinstance(arg, User):
             return arg
@@ -62,7 +61,6 @@ def _extract_log_details(func, result, *args, **kwargs):
                 'email': getattr(traveller, 'email_address', None),
             })
 
-    # New record ID
     if "ADD" in func.__name__.upper() and isinstance(result, int):
         details['new_record_id'] = result
 
@@ -70,15 +68,9 @@ def _extract_log_details(func, result, *args, **kwargs):
 
 
 def audit_activity(event_type, success_desc, failure_desc, suspicious_on_fail=False):
-    """
-    A decorator to log the outcome of a service function. It automatically finds
-    the user object or username in the function arguments to identify the actor.
-    """
-
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            # Execute the actual function first to get its result
             result = func(*args, **kwargs)
 
             is_success = result[0] if isinstance(result, tuple) else bool(result)
@@ -90,7 +82,6 @@ def audit_activity(event_type, success_desc, failure_desc, suspicious_on_fail=Fa
             elif 'username' in kwargs:
                 username = kwargs['username']
 
-            # --- Robustly build context for log message formatting ---
             try:
                 bound_args = inspect.signature(func).bind(*args, **kwargs)
                 bound_args.apply_defaults()

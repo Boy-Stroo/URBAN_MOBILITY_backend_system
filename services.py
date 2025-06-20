@@ -14,10 +14,8 @@ security = SecurityManager()
 da = da.DataAccess()
 
 
-# --- Traveller Services ---
 @audit_activity("ADD_TRAVELLER", "New traveller added with ID: {result}", "Failed attempt to add traveller.")
 def add_new_traveller(data, current_user):
-    """Business logic to add a new traveller."""
     if authorization.has_permission(current_user.role, 'add_traveller') is True:
         try:
             traveller_obj = Traveller(customer_id=None, first_name=data['first_name'], last_name=data['last_name'],
@@ -42,7 +40,6 @@ def add_new_traveller(data, current_user):
 
 
 def search_travellers_by_name_or_id(traveller_query, current_user):
-    """Searches for travellers and logs the action."""
     if authorization.has_permission(current_user.role, 'search_travellers') is True:
         da.add_log_entry(current_user.username, "SEARCH_TRAVELLER", f"Searched for: '{traveller_query}'")
         return da.search_travellers_by_name_or_id(traveller_query)
@@ -52,7 +49,6 @@ def search_travellers_by_name_or_id(traveller_query, current_user):
 
 
 def get_traveller_details(traveller_id, current_user):
-    """Gets full details for a single traveller."""
     if authorization.has_permission(current_user.role, 'view_traveller_details') is True:
         da.add_log_entry(current_user.username, "VIEW_TRAVELLER", f"Viewed details for traveller ID: {traveller_id}")
         return da.get_traveller_by_id(traveller_id)
@@ -63,7 +59,6 @@ def get_traveller_details(traveller_id, current_user):
 
 @audit_activity("UPDATE_TRAVELLER", "Successfully updated traveller", "Failed to update traveller")
 def update_traveller_details(traveller_obj, current_user):
-    """Updates a traveller's details and logs the action."""
     if authorization.has_permission(current_user.role, 'update_traveller') is True:
         return da.update_traveller(traveller_obj)
 
@@ -74,7 +69,6 @@ def update_traveller_details(traveller_obj, current_user):
 @audit_activity("DELETE_TRAVELLER", "Successfully deleted traveller", "Failed to delete traveller",
                 suspicious_on_fail=True)
 def delete_traveller_record(traveller_id, current_user):
-    """Deletes a traveller and logs the action."""
     if authorization.has_permission(current_user.role, 'delete_traveller') is True:
         return da.delete_traveller_by_id(traveller_id)
 
@@ -82,10 +76,8 @@ def delete_traveller_record(traveller_id, current_user):
     return False
 
 
-# --- User Services ---
 @audit_activity("ADD_USER", "New Service Engineer created with ID: {result}", "Failed to create Service Engineer.")
 def add_new_service_engineer(username, password, first_name, last_name, current_user):
-    """Business logic to add a new Service Engineer."""
     if authorization.has_permission(current_user.role, 'add_service_engineer') is True:
         try:
             user_id = da.add_user(username, password, 'serviceengineer')
@@ -114,7 +106,6 @@ def add_new_service_engineer(username, password, first_name, last_name, current_
 @audit_activity("ADD_SYSTEM_ADMIN", "New System Administrator created with ID: {result}",
                 "Failed to create System Administrator.", suspicious_on_fail=True)
 def add_new_system_admin(username, password, first_name, last_name, current_user):
-    """Business logic to add a new System Administrator. Only executable by a SuperAdmin."""
     if authorization.has_permission(current_user.role, 'add_system_admin') is True:
         try:
             user_id = da.add_user(username, password, 'systemadmin')
@@ -144,8 +135,7 @@ def add_new_system_admin(username, password, first_name, last_name, current_user
 
 
 def find_system_admins(query, current_user):
-    """Finds system admins by filtering the full list."""
-    if authorization.has_permission(current_user.role, 'generate_restore_code') is True:
+    if authorization.has_permission(current_user.role, 'search_system_admins') is True:
         all_admins = da.get_all_users_by_role('systemadmin')
         if not query:
             return all_admins
@@ -162,7 +152,6 @@ def find_system_admins(query, current_user):
 
 
 def find_service_engineers(query, current_user):
-    """Finds service engineers by filtering the full list."""
     if authorization.has_permission(current_user.role, 'search_service_engineers') is True:
         da.add_log_entry(current_user.username, "SEARCH_USER", f"Searched for Service Engineers with query: '{query}'")
         all_engineers = da.get_all_users_by_role('serviceengineer')
@@ -181,18 +170,15 @@ def find_service_engineers(query, current_user):
 
 
 def get_service_engineer_details(user_id, current_user):
-    """Gets full profile details for a single service engineer."""
     return da.get_user_profile_by_user_id(user_id)
 
 
 def get_system_admin_details(user_id, current_user):
-    """Gets full profile details for a single system admin."""
     return da.get_user_profile_by_user_id(user_id)
 
 
 @audit_activity("UPDATE_OWN_PROFILE", "Successfully updated own profile", "Failed to update own profile")
 def update_own_profile(user_id, first_name, last_name, current_user):
-    """Updates the currently logged-in user's own profile."""
     if authorization.has_permission(current_user.role, 'update_own_profile') is True:
         return da.update_user_profile(user_id, first_name, last_name)
 
@@ -203,9 +189,6 @@ def update_own_profile(user_id, first_name, last_name, current_user):
 @audit_activity("CHANGE_OWN_PASSWORD", "User successfully changed their password", "Password change failed",
                 suspicious_on_fail=True)
 def change_own_password(current_user, old_password, new_password):
-    """
-    Changes the currently logged-in user's password after verifying the old one.
-    """
     if authorization.has_permission(current_user.role, 'change_own_password') is True:
         stored_hash = da.get_user_hash_by_id(current_user.user_id)
         if not stored_hash:
@@ -225,7 +208,6 @@ def change_own_password(current_user, old_password, new_password):
 
 @audit_activity("UPDATE_USER_PROFILE", "Successfully updated user profile", "Failed to update user profile")
 def update_service_engineer_profile(profile_obj, current_user):
-    """Updates a user's profile and logs the action."""
     if authorization.has_permission(current_user.role, 'update_service_engineer_profile') is True:
         return da.update_user_profile(profile_obj.user_id, profile_obj.first_name, profile_obj.last_name)
 
@@ -235,7 +217,6 @@ def update_service_engineer_profile(profile_obj, current_user):
 
 @audit_activity("UPDATE_SYSTEM_ADMIN_PROFILE", "Successfully updated system admin profile", "Failed to update system admin profile")
 def update_system_admin_profile(profile_obj, current_user):
-    """Updates a system admin's profile and logs the action."""
     if authorization.has_permission(current_user.role, 'update_system_admin_profile') is True:
         return da.update_user_profile(profile_obj.user_id, profile_obj.first_name, profile_obj.last_name)
 
@@ -245,7 +226,6 @@ def update_system_admin_profile(profile_obj, current_user):
 
 @audit_activity("DELETE_USER", "Successfully deactivated user", "Failed to deactivate user", suspicious_on_fail=True)
 def delete_service_engineer(user_id, current_user):
-    """Deletes (soft) a service engineer and logs the action."""
     if authorization.has_permission(current_user.role, 'delete_service_engineer') is True:
         return da.delete_user_by_id(user_id)
 
@@ -255,7 +235,6 @@ def delete_service_engineer(user_id, current_user):
 
 @audit_activity("DELETE_SYSTEM_ADMIN", "Successfully deactivated system admin", "Failed to deactivate system admin", suspicious_on_fail=True)
 def delete_system_admin(user_id, current_user):
-    """Deletes (soft) a system admin and logs the action."""
     if authorization.has_permission(current_user.role, 'delete_system_admin') is True:
         return da.delete_user_by_id(user_id)
 
@@ -265,9 +244,6 @@ def delete_system_admin(user_id, current_user):
 
 @audit_activity("PASSWORD_RESET", "Password was successfully reset", "Password reset failed", suspicious_on_fail=True)
 def reset_service_engineer_password(user_id, new_password, current_user):
-    """
-    Hashes a new password and updates it in the database for a given user.
-    """
     if authorization.has_permission(current_user.role, 'reset_service_engineer_password') is True:
         hashed_password = security.hash_password(new_password)
         encrypted_password = security.encrypt_data(hashed_password.decode('utf-8'))
@@ -280,7 +256,6 @@ def reset_service_engineer_password(user_id, new_password, current_user):
 # --- Scooter Services ---
 @audit_activity("ADD_SCOOTER", "New scooter added with ID: {result}", "Failed attempt to add scooter.")
 def add_new_scooter(data, current_user):
-    """Business logic to add a new scooter."""
     if authorization.has_permission(current_user.role, 'add_scooter') is True:
         try:
             scooter_obj = Scooter(**data)
@@ -300,7 +275,6 @@ def add_new_scooter(data, current_user):
 
 
 def search_scooters(query, current_user):
-    """Searches for scooters and logs the action."""
     if authorization.has_permission(current_user.role, 'search_scooters') is True:
         da.add_log_entry(current_user.username, "SEARCH_SCOOTER", f"Searched for scooters with query: '{query}'")
         return da.search_scooters(query)
@@ -310,7 +284,6 @@ def search_scooters(query, current_user):
 
 
 def get_scooter_details(scooter_id, current_user):
-    """Gets full details for a single scooter."""
     if authorization.has_permission(current_user.role, 'view_scooter_details') is True:
         da.add_log_entry(current_user.username, "VIEW_SCOOTER", f"Viewed details for scooter ID: {scooter_id}")
         return da.get_scooter_by_id(scooter_id)
@@ -321,7 +294,6 @@ def get_scooter_details(scooter_id, current_user):
 
 @audit_activity("UPDATE_SCOOTER", "Successfully updated scooter", "Failed to update scooter")
 def update_scooter_details(scooter_obj, current_user, is_limited=False):
-    """Updates a scooter's details, checking for appropriate permission."""
     required_permission = 'update_scooter_limited' if is_limited else 'update_scooter_full'
     if authorization.has_permission(current_user.role, required_permission) is True:
         return da.update_scooter(scooter_obj)
@@ -332,7 +304,6 @@ def update_scooter_details(scooter_obj, current_user, is_limited=False):
 
 @audit_activity("DELETE_SCOOTER", "Successfully deleted scooter", "Failed to delete scooter", suspicious_on_fail=True)
 def delete_scooter_record(scooter_id, current_user):
-    """Deletes a scooter and logs the action."""
     if authorization.has_permission(current_user.role, 'delete_scooter') is True:
         return da.delete_scooter_by_id(scooter_id)
 
@@ -342,7 +313,6 @@ def delete_scooter_record(scooter_id, current_user):
 
 # --- Log Services ---
 def view_system_logs(current_user):
-    """Retrieves all logs, marks them as read, and logs the viewing action."""
     if authorization.has_permission(current_user.role, 'view_system_logs') is True:
         da.add_log_entry(current_user.username, "VIEW_LOGS", "System logs were viewed.")
         logs = da.get_all_logs()
@@ -366,7 +336,6 @@ def check_for_suspicious_activity(current_user):
 # --- Backup and Restore Services ---
 @audit_activity("CREATE_BACKUP", "Backup created: {result}", "Backup creation failed.")
 def create_backup(current_user):
-    """Creates a timestamped ZIP archive of the database file."""
     if authorization.has_permission(current_user.role, 'create_backup') is True:
         backup_dir = "backups"
         if not os.path.exists(backup_dir):
@@ -394,7 +363,6 @@ def create_backup(current_user):
 
 
 def list_backups(current_user):
-    """Lists available backup files."""
     if authorization.has_permission(current_user.role, 'restore_backup') is True:
         backup_dir = "backups"
         if not os.path.exists(backup_dir):
@@ -410,9 +378,7 @@ def list_backups(current_user):
 @audit_activity("RESTORE_BACKUP", "Database restored from: {backup_file}", "Failed to restore database.",
                 suspicious_on_fail=True)
 def restore_from_backup(backup_file, current_user, restore_code_obj=None):
-    """Restores the database from a specified backup file."""
     if authorization.has_permission(current_user.role, 'restore_backup') is True:
-        # The validation is now expected to have happened before calling this function
 
         backup_dir = "backups"
         backup_path = os.path.join(backup_dir, backup_file)
@@ -448,7 +414,6 @@ def restore_from_backup(backup_file, current_user, restore_code_obj=None):
 @audit_activity("GENERATE_RESTORE_CODE", "Generated restore code for System Admin ID: {system_admin_id}",
                 "Failed to generate restore code.")
 def generate_restore_code(system_admin_id, backup_filename, current_user):
-    """Generates a secure, one-time use restore code."""
     if authorization.has_permission(current_user.role, 'generate_restore_code') is True:
         code_value = secrets.token_hex(16)
         now = datetime.now()
@@ -475,7 +440,6 @@ def generate_restore_code(system_admin_id, backup_filename, current_user):
 
 @audit_activity("GET_RESTORE_CODES", "Got all restore codes for System Admin ID: {system_admin_id}",
                 "Failed to get restore codes.")
-# In services.py (or wherever remove_restore_code is defined)
 def remove_restore_code(system_admin_id, current_user):
     if authorization.has_permission(current_user.role, 'generate_restore_code'):
         existing_codes = da.get_restore_codes_by_system_admin(system_admin_id)
@@ -489,10 +453,6 @@ def remove_restore_code(system_admin_id, current_user):
 @audit_activity("VALIDATE_RESTORE_CODE", "Restore code validated for user {current_user.username}",
                 "Restore code validation failed for user {current_user.username}", suspicious_on_fail=True)
 def validate_restore_code(restore_code_value, current_user):
-    """
-    Validates a restore code against the database.
-    Returns the code object and a message.
-    """
     code_obj = da.get_restore_code(restore_code_value)
     if not code_obj:
         return None, "Invalid restore code."
@@ -504,19 +464,11 @@ def validate_restore_code(restore_code_value, current_user):
         da.update_restore_code_status(code_obj.code_id, 'expired')
         return None, "This restore code has expired."
 
-    # If all checks pass, return the valid code object
     return code_obj, "Restore code is valid."
 
 
 if __name__ == "__main__":
     print("This module is not meant to be run directly. Use the main application to access these services.")
-    # Test add_new_traveller
-    # Uncomment the following lines to test the add_new_traveller function
-    # traveller_obj = Traveller(customer_id=None, first_name=data['first_name'], last_name=data['last_name'],
-    #                           birthday=data['birthday'], gender=data['gender'], street_name=data['street_name'],
-    #                           house_number=data['house_number'], zip_code=data['zip_code'], city=data['city'],
-    #                           email_address=data['email_address'], mobile_phone=data['mobile_phone'],
-    #                           driving_license_number=data['driving_license_number'])
     test_data = {
         'first_name': 'John',
         'last_name': 'Doe',
@@ -530,6 +482,5 @@ if __name__ == "__main__":
         'email_address': 'john.doe@example.com',
         'driving_license_number': 'TEST123456'
     }
-    user = User(user_id='admin', username='admin', role='systemadmin')  # Mock user for testing
+    user = User(user_id='admin', username='admin', role='systemadmin')
     add_new_traveller(test_data, user)
-

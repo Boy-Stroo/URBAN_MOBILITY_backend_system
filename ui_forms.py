@@ -9,10 +9,7 @@ import display
 import data_access
 
 
-
-# --- Helper Functions ---
 def select_from_list(prompt, item_list, display_key):
-    """A generic helper to display a list and let the user select an item."""
     if not item_list:
         print("No items found.")
         return None
@@ -38,10 +35,6 @@ def select_from_list(prompt, item_list, display_key):
 
 def _search_and_select_item(search_prompt, search_function, current_user, result_formatter, selection_prompt,
                             no_results_message):
-    """
-    A generic helper to handle the common pattern of searching for an item,
-    displaying results, and letting the user select one.
-    """
     query = get_input(search_prompt)
     results = search_function(query, current_user)
 
@@ -52,16 +45,13 @@ def _search_and_select_item(search_prompt, search_function, current_user, result
 
     display_list = [result_formatter(r) for r in results]
 
-    # Use table display for search results
     import display
     selected = display.display_search_results_table(display_list, 'display')
 
     return selected
 
 
-# --- Traveller UI Forms ---
 def ui_add_traveller(user):
-    """UI flow for collecting and validating new traveller data."""
     display_header("Add New Traveller")
     first_name = get_validated_input("First Name", validators.is_valid_name)
     last_name = get_validated_input("Last Name", validators.is_valid_name)
@@ -116,7 +106,6 @@ def ui_search_travellers(user):
 
 
 def ui_update_traveller(user):
-    """UI flow for finding and updating a traveller with field selection."""
     display_header("Update Traveller Record")
 
     selected = _search_and_select_item(
@@ -196,7 +185,6 @@ def ui_update_traveller(user):
 
 
 def ui_delete_traveller(user):
-    """UI flow for finding and deleting a traveller."""
     display_header("Delete Traveller Record")
 
     selected = _search_and_select_item(
@@ -221,7 +209,6 @@ def ui_delete_traveller(user):
     else:
         print("Deletion cancelled.")
     input("\nPress Enter to return...")
-
 
 # --- User Management Forms (for any logged-in user) ---
 
@@ -268,7 +255,6 @@ def ui_change_own_password(user):
                                                     new_password=new_password)
     print(f"\n{message}")
     input("Press Enter to return...")
-
 
 # --- Admin Forms for User Management ---
 
@@ -410,7 +396,7 @@ def ui_update_service_engineer(user):
     if not selected:
         return
 
-    profile_obj, username = services.get_service_engineer_details(selected['id'], user)
+    profile_obj = services.get_service_engineer_details(selected['id'], user)
     if not profile_obj:
         print("Could not retrieve profile details.")
         input("\nPress Enter to return...")
@@ -753,14 +739,12 @@ def ui_delete_scooter(user):
     input("\nPress Enter to return...")
 
 
-# --- Log Viewing UI ---
 def ui_view_system_logs(user):
     """UI flow for displaying system logs using the display module."""
     logs = services.view_system_logs(user)
     display.display_system_logs_paginated(logs)
 
 
-# --- Backup UI ---
 def ui_create_backup(user):
     """UI flow for creating a database backup."""
     display_header("Create Database Backup")
@@ -844,7 +828,6 @@ def ui_generate_restore_code(user):
     """UI flow for a SuperAdmin to generate a one-time restore code."""
     display_header("Generate Restore Code")
 
-    # Step 1: Select a backup file
     backups = services.list_backups(user)
     if not backups:
         print("No backup files found. A backup must exist to generate a code.")
@@ -861,7 +844,6 @@ def ui_generate_restore_code(user):
 
     backup_file = selected_backup['id']
 
-    # Step 2: Select a System Administrator
     selected_admin = _search_and_select_item(
         search_prompt="Enter username or name of System Admin to assign code to",
         search_function=services.find_system_admins,
@@ -878,7 +860,6 @@ def ui_generate_restore_code(user):
 
     admin_id = selected_admin['id']
 
-    # Step 3: Generate the code
     print(f"\nGenerating a restore code for {selected_admin['display']} and backup {backup_file}...")
     code = services.generate_restore_code(system_admin_id=admin_id, backup_filename=backup_file, current_user=user)
 
@@ -898,7 +879,6 @@ def ui_remove_restore_code(user):
     """UI flow for a SuperAdmin to remove an existing restore code assigned to a specific system admin."""
     display_header("Remove Restore Code")
 
-    # Step 1: Select a System Administrator
     selected_admin = _search_and_select_item(
         search_prompt="Enter username or name of System Admin to remove code from",
         search_function=services.find_system_admins,
@@ -915,7 +895,6 @@ def ui_remove_restore_code(user):
 
     admin_id = selected_admin['id']
 
-    # Step 2: Remove the restore code
     print(f"\nRemoving restore code for {selected_admin['display']}...")
     result = services.remove_restore_code(system_admin_id=admin_id, current_user=user)
     if result is True:
@@ -926,4 +905,3 @@ def ui_remove_restore_code(user):
         print("\nFailed to remove restore code. Please check the logs.")
 
     input("\nPress Enter to return to the menu...")
-

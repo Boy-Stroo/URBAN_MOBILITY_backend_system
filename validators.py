@@ -1,55 +1,44 @@
 import re
 from datetime import datetime
 
-# --- Regular Expression Patterns ---
-RE_ZIP_CODE = re.compile(r'^[1-9][0-9]{3}[A-Z]{2}$')
+RE_ZIP_CODE = re.compile(r'^[1-9][0-9]{3}[A-Za-z]{2}$')
 RE_MOBILE_PHONE = re.compile(r'^\+31-6-\d{8}$')
 RE_EMAIL = re.compile(r'^(?=.{1,254}$)[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
-# Driving license regex is now handled within the function for more complex logic.
 RE_PASSWORD_COMPLEXITY = re.compile(
-    r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&_#-])[A-Za-z\d@$!%*?&_#-]{12,30}$'
-)
+    r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&_#-])[A-Za-z\d@$!%*?&_#-]{12,30}$')
 
-RE_MODEL = re.compile(r"^[A-Za-z0-9\s\-'.]{0,50}$") # Allows letters, numbers, spaces, hyphens, apostrophes, and dots, limited to 50 characters
-RE_speed = re.compile(r'^(100|[1-9][0-9]?)$') # Checks for speed between 1 and 100 km/h
-RE_battery_capacity = re.compile(r'^([1-9][0-9]{0,3})$') # Checks for battery capacity between 1 and 9999 Wh
+RE_MODEL = re.compile(r"^[A-Za-z0-9\s\-'.]{0,50}$")
+RE_speed = re.compile(r'^(100|[1-9][0-9]?)$')
+RE_battery_capacity = re.compile(r'^([1-9][0-9]{0,3})$')
 RE_SCOOTER_SERIAL = re.compile(r'^[A-Za-z0-9]{10,17}$')
-RE_ALPHA_ONLY = re.compile(r"^[A-Za-z\s\-'.]{0,100}$") # Allows letters, spaces, hyphens, dots, apostrophes, and is limited to 100 characters
-RE_ALPHA_NUMERIC_ONLY = re.compile(r'^[a-zA-Z0-9\s.,#-]+$') # Allows more characters for addresses
-RE_HOUSE_NUMBER = re.compile(r'^[1-9][0-9]{0,3}[- ]?[A-Za-z]?$') # For Dutch house numbers e.g., 123, 123A, 123-A
+RE_ALPHA_ONLY = re.compile(r"^(?=.*[A-Za-z])[A-Za-z\s\-'.]{1,100}$")
+RE_ALPHA_NUMERIC_ONLY = re.compile(r'^[a-zA-Z0-9\s.,#-]+$')
+RE_HOUSE_NUMBER = re.compile(r'^[1-9][0-9]{0,3}[- ]?[A-Za-z]?$')
 RE_FIVE_DECIMAL = re.compile(r'^\d{1,5}(\.\d{5})?$')
-RE_SoC = re.compile(r'^(?:100(?:\.0{1,2})?|[0-9]{1,2}(?:\.[0-9]{1,2})?)$') # State of Charge (SoC) must be between 0 and 100, allowing up to 2 decimal places
-RE_MILEAGE = re.compile(r'^(?:0|[1-9][0-9]{0,9})(?:\.[0-9]{1,2})?$') # Mileage must be a number between 0 and 9999999999.99, allowing up to 2 decimal places
-
-# --- Validation Functions ---
-# Each function now returns a tuple: (is_valid: bool, message: str or None)
+RE_SoC = re.compile(r'^(?:100(?:\.0{1,2})?|[0-9]{1,2}(?:\.[0-9]{1,2})?)$')
+RE_MILEAGE = re.compile(r'^(?:0|[1-9][0-9]{0,9})(?:\.[0-9]{1,2})?$')
 
 def is_valid_name(name):
-    """Validates that a name contains only alphabetic characters, spaces, apostrophes or hyphens."""
     if RE_ALPHA_ONLY.match(name):
         return True, None
     return False, "Input must only contain letters, spaces, apostrophes, dots or hyphens (no numbers) and must be shorter than 100 characters."
 
 def is_valid_gender(gender):
-    """Validates that gender is either 'male' or 'female'."""
     if gender.lower() in ['male', 'female']:
         return True, None
     return False, "Gender must be either 'male' or 'female'."
 
 def is_valid_address_field(field):
-    """Validates that a street name contains reasonable characters."""
     if RE_ALPHA_ONLY.match(field):
         return True, None
     return False, "Street name must only contain letters, spaces, apostrophes, dots or hyphens (no numbers) and must be shorter than 100 characters."
 
 def is_valid_house_number(number):
-    """Validates a Dutch house number format (e.g., 123, 123A, 123-A)."""
     if RE_HOUSE_NUMBER.match(number):
         return True, None
     return False, "Invalid house number format. It should be a number with an optional suffix (e.g., 24 B)."
 
 def is_valid_date(date_string, date_format='%Y-%m-%d', is_birth_date=False):
-    """Validates if a string is a valid date, is in the correct format, and is not in the future."""
     try:
         b_date = datetime.strptime(date_string, date_format).date()
         _120_YEARS_AGO = datetime.now().date().replace(year=datetime.now().year - 120)
@@ -69,83 +58,68 @@ def is_valid_birth_date(date_string):
     return is_valid_date(date_string, is_birth_date=True) # extra check for age
 
 def is_valid_zip_code(zip_code):
-    """Validates Dutch zip code format (DDDDXX)."""
     if RE_ZIP_CODE.match(zip_code):
         return True, None
     return False, "Invalid Zip Code format. Must be DDDDXX (e.g., 1234AB or 1234ab)."
 
 def is_valid_city(city):
-    """Validates if city is in city list"""
     _cities = ['Rotterdam', 'Schiedam', 'Delft', 'The Hague', 'Amsterdam', 'Spijkenisse', 'Barendrecht', 'Brielle', 'Hellevoetsluis', 'Vlaardingen']
     if city in _cities:
         return True, None
     return False, "Invalid city. Must be one of the predefined cities: {}".format(", ".join(_cities))
 
 def is_valid_mobile_phone(phone):
-    """Validates Dutch mobile phone format (+31-6-DDDDDDDD)."""
     if RE_MOBILE_PHONE.match(phone):
         return True, None
     return False, "Invalid mobile phone format. Must be +31-6-DDDDDDDD."
 
 def is_valid_email(email):
-    """Validates email format."""
     if RE_EMAIL.match(email):
         return True, None
     return False, "Invalid email address format."
 
 def is_valid_driving_license(license_number):
-    """Validates Dutch driving license format (1 letter + 8 digits OR 2 letters + 7 digits)."""
-    # Convert to uppercase for validation
     license_number = license_number.upper()
 
-    # General format check: must start with 1 or 2 letters, followed by only digits.
     if not re.match(r'^[A-Z]{1,2}\d+$', license_number):
         return False, "Invalid format. Must start with 1 or 2 letters followed by digits."
 
-    # Specific length check based on the number of leading letters.
-    if license_number[1].isdigit(): # First character is a letter, second is a digit.
-        if len(license_number) == 9: # 1 letter + 8 digits = 9 total
+    if license_number[1].isdigit():
+        if len(license_number) == 9:
             return True, None
         else:
             return False, "A license starting with one letter must be followed by 8 digits."
-    else: # First two characters are letters.
-        if len(license_number) == 9: # 2 letters + 7 digits = 9 total
+    else:
+        if len(license_number) == 9:
             return True, None
         else:
             return False, "A license starting with two letters must be followed by 7 digits."
 
 def is_valid_password(password):
-    """Validates password complexity."""
     if RE_PASSWORD_COMPLEXITY.match(password):
         return True, None
     return False, "Password must be 12-30 chars with an uppercase, lowercase, digit, and special character."
 
 def is_valid_username(username):
-    """Validates username format and length."""
-    # Check length
     if not (8 <= len(username) <= 20):
         return False, "Username must be between 8 and 20 characters long."
 
-    # Check format: can contain letters (a-z), numbers (0-9), underscores (_), apostrophes ('), and periods (.)
     if not re.match(r'^[a-zA-Z0-9_.\']+$', username):
         return False, "Username can only contain letters (a-z), numbers (0-9), underscores (_), apostrophes ('), and periods (.)."
 
     return True, None
 
 def is_valid_scooter_serial(serial):
-    """Validates scooter serial number format."""
     if RE_SCOOTER_SERIAL.match(serial):
         return True, None
     return False, "Serial number must be 10-17 alphanumeric characters."
 
 def is_valid_soc(soc_string):
-    """Validates State of Charge (SoC) is between 0 and 100."""
     if RE_SoC.match(soc_string):
         return True, None
     return False, "SoC must be a valid number between 0 and 100."
 
 def is_valid_gps_coordinate(coord_string, coord_type):
-    """Validates latitude or longitude format and range."""
     try:
         _coord = float(coord_string)
         if coord_type == 'latitude':
@@ -161,31 +135,26 @@ def is_valid_gps_coordinate(coord_string, coord_type):
         return False, "GPS coordinate must be a valid number."
 
 def is_valid_integer(value):
-    """Checks if a string represents a valid integer."""
     if value.isdigit() and value <= 9999999999:
         return True, None
     return False, "Input must be a whole number."
 
 def is_valid_speed(value):
-    """Checks if a string represents a valid speed in km/h."""
     if RE_speed.match(value):
         return True, None
     return False, "Speed must be a number between 1 and 100."
 
 def is_valid_mileage(value):
-    """Checks if a string represents a valid mileage in km."""
     if RE_MILEAGE.match(value):
         return True, None
     return False, "Mileage must be a number between 0 and 9999999999.99"
 
 def is_valid_battery_capacity(value):
-    """Checks if a string represents a valid battery capacity in Wh."""
     if RE_battery_capacity.match(value):
         return True, None
     return False, "Battery capacity must be a number between 1 and 9999."
 
 def is_valid_float(value):
-    """Checks if a string represents a valid float."""
     try:
         float(value)
         return True, None
@@ -193,19 +162,16 @@ def is_valid_float(value):
         return False, "Input must be a valid number (e.g., 50 or 25.5)."
 
 def is_valid_OoS(value):
-    """Checks if a string represents a valid yes/no value."""
     if value.lower() in ['yes', 'no']:
         return True, None
     return False, "Input must be 'yes' or 'no'."
 
 def is_valid_model(value):
-    """Validates that a string is shorter than 100 characters."""
     if RE_MODEL.match(value):
         return True, None
     return False, "Input must be a string shorter than 100 characters."
 
 def validate_rotterdam_coordinates(coords, directions):
-    """Validate coordinates are within Rotterdam region"""
     rotterdam_bounds = {
         'latitude': {'min': 51.89000, 'max': 51.94000},
         'longitude':{'min': 4.40000, 'max': 4.55000}

@@ -55,11 +55,11 @@ def display_system_logs_paginated(logs):
                 suspicious_flag
             ])
 
-        print("=" * 174)
-        print(f"| {'Time':<30} | {'User':<15} | {'Event':<20} | {'Description':<80} | {'Details':<50} | {'Suspicious':<10} |")
-        print("=" * 174)
+        print("=" * 259)
+        print(f"| {'Time':<30} | {'User':<15} | {'Event':<25} | {'Description':<80} | {'Details':<80} | {'Suspicious':<10} |")
+        print("=" * 259)
         for row in table_data:
-            print(f"| {row[0]:<30} | {row[1]:<15} | {row[2]:<20} | {row[3]:<80} | {row[4]:<50} | {row[5]:^10} |")
+            print(f"| {row[0]:<30} | {row[1]:<15} | {row[2]:<25} | {row[3]:<80} | {row[4]:<80} | {row[5]:^10} |")
 
 
         print("\n[N] Next Page | [P] Previous Page | [Q] Quit to Menu")

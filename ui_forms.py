@@ -75,7 +75,6 @@ def ui_add_traveller(user):
 
 
 def ui_search_travellers(user):
-    """UI flow for searching travellers and viewing details."""
     display_header("Search for Traveller")
 
     selected = _search_and_select_item(
@@ -210,10 +209,8 @@ def ui_delete_traveller(user):
         print("Deletion cancelled.")
     input("\nPress Enter to return...")
 
-# --- User Management Forms (for any logged-in user) ---
 
 def ui_update_own_profile(user):
-    """UI flow for a user to update their own profile."""
     display_header("Update My Profile")
     profile_obj = services.get_service_engineer_details(user.user_id, user)
     if not profile_obj:
@@ -235,7 +232,6 @@ def ui_update_own_profile(user):
 
 
 def ui_change_own_password(user):
-    """UI flow for a user to change their own password."""
     display_header("Change My Password")
     old_password = get_password_input("Enter your CURRENT password")
     if not old_password:
@@ -256,10 +252,8 @@ def ui_change_own_password(user):
     print(f"\n{message}")
     input("Press Enter to return...")
 
-# --- Admin Forms for User Management ---
 
 def ui_add_system_admin(user):
-    """UI flow for a SuperAdmin to add a new System Administrator."""
     display_header("Add New System Administrator")
     username = get_validated_input("Enter username for new System Admin", validators.is_valid_username)
     password = get_validated_input("Enter temporary password", validators.is_valid_password, is_password=True)
@@ -270,7 +264,6 @@ def ui_add_system_admin(user):
     input("\nPress Enter to return to the menu...")
 
 def ui_search_system_admins(user):
-    """UI flow for searching System Administrators and viewing details."""
     display_header("Search for System Administrator")
 
     selected = _search_and_select_item(
@@ -291,7 +284,6 @@ def ui_search_system_admins(user):
     input("\nPress Enter to return...")
 
 def ui_update_system_admin(user):
-    """UI flow for finding and updating a System Administrator."""
     display_header("Update System Administrator Profile")
 
     selected = _search_and_select_item(
@@ -348,7 +340,6 @@ def ui_update_system_admin(user):
             time.sleep(1)
 
 def ui_add_service_engineer(user):
-    """UI flow for adding a new Service Engineer."""
     display_header("Add New Service Engineer")
     username = get_validated_input("Enter username", validators.is_valid_username)
     password = get_validated_input("Enter password", validators.is_valid_password, is_password=True)
@@ -359,7 +350,6 @@ def ui_add_service_engineer(user):
     input("\nPress Enter to return to the menu...")
 
 def ui_search_service_engineers(user):
-    """UI flow for searching Service Engineers and viewing details."""
     display_header("Search for Service Engineer")
 
     selected = _search_and_select_item(
@@ -381,7 +371,6 @@ def ui_search_service_engineers(user):
 
 
 def ui_update_service_engineer(user):
-    """UI flow for finding and updating a Service Engineer."""
     display_header("Update Service Engineer Profile")
 
     selected = _search_and_select_item(
@@ -439,7 +428,6 @@ def ui_update_service_engineer(user):
 
 
 def ui_delete_service_engineer(user):
-    """UI flow for finding and deleting a Service Engineer."""
     display_header("Delete Service Engineer")
 
     selected = _search_and_select_item(
@@ -466,7 +454,6 @@ def ui_delete_service_engineer(user):
     input("\nPress Enter to return...")
 
 def ui_delete_system_admin(user):
-    """UI flow for finding and deleting a System Administrator."""
     display_header("Delete System Administrator")
 
     selected = _search_and_select_item(
@@ -493,7 +480,6 @@ def ui_delete_system_admin(user):
     input("\nPress Enter to return...")
 
 def ui_reset_service_engineer_password(user):
-    """UI flow for resetting a Service Engineer's password."""
     display_header("Reset Service Engineer Password")
 
     selected = _search_and_select_item(
@@ -529,9 +515,7 @@ def ui_reset_service_engineer_password(user):
     input("\nPress Enter to return...")
 
 
-# --- Scooter UI Forms ---
 def ui_add_scooter(user):
-    """UI flow for adding a new scooter with robust type conversion."""
     display_header("Add New Scooter")
 
     scooter_str_data = {
@@ -583,7 +567,6 @@ def ui_add_scooter(user):
 
 
 def ui_search_scooters(user):
-    """UI flow for searching scooters and viewing details."""
     display_header("Search for Scooter")
     selected = _search_and_select_item(
         search_prompt="Enter brand, model, or serial number to search",
@@ -605,10 +588,6 @@ def ui_search_scooters(user):
 
 
 def ui_update_scooter(user, limited=False):
-    """
-    UI flow for finding and updating a scooter.
-    Can be run in a limited mode for Service Engineers.
-    """
     display_header("Update Scooter Record")
     selected = _search_and_select_item(
         search_prompt="Enter a brand, model, or serial to search for the scooter to update",
@@ -712,7 +691,6 @@ def ui_update_scooter(user, limited=False):
 
 
 def ui_delete_scooter(user):
-    """UI flow for finding and deleting a scooter."""
     display_header("Delete Scooter Record")
     selected = _search_and_select_item(
         search_prompt="Enter brand, model, or serial number to search for the scooter to delete",
@@ -740,13 +718,11 @@ def ui_delete_scooter(user):
 
 
 def ui_view_system_logs(user):
-    """UI flow for displaying system logs using the display module."""
     logs = services.view_system_logs(user)
     display.display_system_logs_paginated(logs)
 
 
 def ui_create_backup(user):
-    """UI flow for creating a database backup."""
     display_header("Create Database Backup")
     print("This will create a secure, timestamped backup of the entire database.")
     confirm = get_input("Are you sure you want to proceed? (yes/no): ").lower()
@@ -759,7 +735,6 @@ def ui_create_backup(user):
 
 
 def ui_restore_from_backup(user):
-    """UI flow for restoring the database from a backup."""
     display_header("Restore Database from Backup")
 
     backup_file = None
@@ -825,7 +800,6 @@ def ui_restore_from_backup(user):
 
 
 def ui_generate_restore_code(user):
-    """UI flow for a SuperAdmin to generate a one-time restore code."""
     display_header("Generate Restore Code")
 
     backups = services.list_backups(user)
@@ -876,7 +850,6 @@ def ui_generate_restore_code(user):
     input("\nPress Enter to return to the menu...")
 
 def ui_remove_restore_code(user):
-    """UI flow for a SuperAdmin to remove an existing restore code assigned to a specific system admin."""
     display_header("Remove Restore Code")
 
     selected_admin = _search_and_select_item(

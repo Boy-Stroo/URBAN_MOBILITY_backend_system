@@ -45,7 +45,7 @@ The project is organized into modules with distinct responsibilities:
 ├── auditing.py               # Contains the audit decorator for logging activities
 ├── ui_forms.py               # Contains the UI logic for specific forms (e.g., add traveller)
 ├── ui_utils.py               # Utility functions for the UI (e.g., clear screen, get input)
-├── display.py                # Handles formatted data presentation (e.g., using tabulate)
+├── display.py                # Handles formatted data presentation (e.g., using custom solution)
 └── secret.key                # Stores the secret key for data encryption (auto-generated)
 ```
 
@@ -116,7 +116,7 @@ Follow these steps to set up and run the system:
 ### 1. Install Dependencies:
 The project requires a few external libraries. Install them using pip:
 ```bash
-pip install cryptography bcrypt tabulate
+pip install cryptography bcrypt
 ```
 
 ### 2. Run the Initial Setup:

@@ -55,7 +55,7 @@ def is_valid_date(date_string, date_format='%Y-%m-%d', is_birth_date=False):
         return False, f"Invalid date format. Please use {date_format}."
 
 def is_valid_birth_date(date_string):
-    return is_valid_date(date_string, is_birth_date=True) # extra check for age
+    return is_valid_date(date_string, is_birth_date=True)
 
 def is_valid_zip_code(zip_code):
     if RE_ZIP_CODE.match(zip_code):

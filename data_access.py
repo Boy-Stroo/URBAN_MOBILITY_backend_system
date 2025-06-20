@@ -2,7 +2,7 @@ import sqlite3
 from contextlib import contextmanager
 import database
 import uuid
-from models import Traveller, Scooter, UserProfile, RestoreCode # , User
+from models import Traveller, Scooter, UserProfile, RestoreCode
 from security import SecurityManager
 
 
@@ -151,7 +151,6 @@ class DataAccess:
                     if key not in ['log_id', 'is_suspicious', 'is_read']:
                         log_data[key] = self.decrypt_value(log_data[key])
                 self.in_memory_data['logs'].append(log_data)
-
         return self.in_memory_data
 
     # --- User and Profile Data Access ---
@@ -162,7 +161,7 @@ class DataAccess:
         hashed_password = self.security.hash_password(password)
         encrypted_password = self.security.encrypt_data(hashed_password.decode('utf-8'))
         encrypted_role = self.security.encrypt_data(role.lower())
-        encrypted_is_active = self.security.encrypt_data('1')  # Active by default
+        encrypted_is_active = self.security.encrypt_data('1')
 
         sql = "INSERT INTO Users(user_id, username, password_hash, role, is_active) VALUES (?, ?, ?, ?, ?)"
         try:
@@ -298,7 +297,7 @@ class DataAccess:
             print(f"An error occurred while deleting a user: {e}")
             return False
 
-    # --- Traveller Data Access ---
+
     def add_traveller(self, traveller: Traveller):
         """Adds a new traveller to the database, encrypting sensitive fields."""
         customer_id = str(uuid.uuid4())
@@ -335,7 +334,7 @@ class DataAccess:
     def search_travellers_by_name_or_id(self, traveller_query):
         """Searches for travellers by first or last name using in-memory decrypted data."""
         results = []
-        traveller_query = traveller_query.lower()  # Case-insensitive search
+        traveller_query = traveller_query.lower()
 
 
         # Search in the in-memory decrypted data
@@ -415,7 +414,6 @@ class DataAccess:
             print(f"An error occurred deleting traveller: {e}")
             return False
 
-    # --- Scooter Data Access ---
     def add_scooter(self, scooter: Scooter):
         """Adds a new scooter to the database, encrypting all fields."""
         scooter_id = str(uuid.uuid4())
@@ -423,7 +421,6 @@ class DataAccess:
         try:
             with self.db_connection() as conn:
                 cursor = conn.cursor()
-                # Encrypt all fields
                 encrypted_data = {
                     'brand': self.encrypt_value(scooter.brand),
                     'model': self.encrypt_value(scooter.model),
@@ -590,7 +587,6 @@ class DataAccess:
             print(f"An error occurred deleting scooter: {e}")
             return False
 
-    # --- Log Data Access ---
     def add_log_entry(self, username, event_type, description, additional_info="", is_suspicious=0):
         """Adds a new, encrypted entry to the Logs table."""
         from datetime import datetime
@@ -637,7 +633,7 @@ class DataAccess:
         # Count suspicious and unread logs in memory
         count = 0
         for log in self.in_memory_data['logs']:
-            if log['is_suspicious'] == '1' and log['is_read'] == '0':
+            if log['is_suspicious'] == 1 and log['is_read'] == 0:
                 count += 1
 
         return count

@@ -174,10 +174,10 @@ class UrbanMobilityApp:
             if user.role in ['systemadmin', 'superadmin']:
                 suspicious_count = services.check_for_suspicious_activity(user)
                 if suspicious_count > 0:
-                    print("\n" + "!" * 60)
-                    print(f"!!  WARNING: {suspicious_count} new suspicious activity alert(s) recorded. !!")
-                    print("!!  Please review the system logs for details.          !!")
-                    print("!" * 60)
+                    print("\n" + "!" * 61)
+                    print(f"!!  WARNING: {suspicious_count:<2} new suspicious activity alert(s) recorded. !!")
+                    print("!!  Please review the system logs for details.             !!")
+                    print("!" * 61)
                     input("\nPress Enter to continue to the main menu...")
 
             time.sleep(1.5)
@@ -277,7 +277,6 @@ class UrbanMobilityApp:
         ui_forms.ui_update_scooter(self.current_user, limited=True)
 
 
-# --- Entry Point ---
 if __name__ == "__main__":
     import database
 

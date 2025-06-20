@@ -1,5 +1,5 @@
 import data_access as da
-from models import Traveller, Scooter, User, RestoreCode #, UserProfile
+from models import Traveller, Scooter, User, RestoreCode
 from datetime import datetime, timedelta
 from security import SecurityManager
 from auditing import audit_activity
@@ -253,7 +253,6 @@ def reset_service_engineer_password(user_id, new_password, current_user):
     return False
 
 
-# --- Scooter Services ---
 @audit_activity("ADD_SCOOTER", "New scooter added with ID: {result}", "Failed attempt to add scooter.")
 def add_new_scooter(data, current_user):
     if authorization.has_permission(current_user.role, 'add_scooter') is True:
@@ -311,7 +310,6 @@ def delete_scooter_record(scooter_id, current_user):
     return False
 
 
-# --- Log Services ---
 def view_system_logs(current_user):
     if authorization.has_permission(current_user.role, 'view_system_logs') is True:
         da.add_log_entry(current_user.username, "VIEW_LOGS", "System logs were viewed.")
@@ -324,7 +322,7 @@ def view_system_logs(current_user):
 
 
 def check_for_suspicious_activity(current_user):
-    """Checks for unread suspicious logs for alerting purposes."""
+    print("Im in suspicious activity")
     if authorization.has_permission(current_user.role, 'view_system_logs') is True:
         count = da.get_unread_suspicious_logs_count()
         if count > 0:
@@ -333,7 +331,6 @@ def check_for_suspicious_activity(current_user):
     return 0
 
 
-# --- Backup and Restore Services ---
 @audit_activity("CREATE_BACKUP", "Backup created: {result}", "Backup creation failed.")
 def create_backup(current_user):
     if authorization.has_permission(current_user.role, 'create_backup') is True:

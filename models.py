@@ -40,7 +40,7 @@ class Scooter:
         self.target_soc_max = target_soc_max
         self.location_latitude = location_latitude
         self.location_longitude = location_longitude
-        self.out_of_service = out_of_service # Boolean
+        self.out_of_service = out_of_service
         self.mileage_km = mileage_km
         self.last_maintenance_date = last_maintenance_date
         self.in_service_date = in_service_date or datetime.datetime.now()
@@ -84,7 +84,7 @@ class RestoreCode:
         self.restore_code = restore_code
         self.backup_filename = backup_filename
         self.system_admin_id = system_admin_id
-        self.status = status  # Should be one of: 'active', 'used', 'revoked'
+        self.status = status
         self.generated_at = generated_at
         self.expires_at = expires_at
 

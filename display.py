@@ -24,11 +24,6 @@ def display_search_results_table(items, display_key):
 
 
 def display_system_logs_paginated(logs):
-    """
-    Displays system logs in a paginated, tabulated format.
-
-    :param logs: A list of log entry dictionaries.
-    """
     if not logs:
         print("No logs found.")
         input("\nPress Enter to return...")
@@ -39,7 +34,7 @@ def display_system_logs_paginated(logs):
     total_pages = (len(logs) - 1) // page_size + 1
 
     while True:
-        from ui_utils import display_header, get_input  # Local import to avoid circular dependency
+        from ui_utils import display_header, get_input
         display_header(f"System Logs (Page {page + 1}/{total_pages})")
 
         start_index = page * page_size
@@ -47,7 +42,6 @@ def display_system_logs_paginated(logs):
 
         page_logs = logs[start_index:end_index]
 
-        # Prepare data for tabulate
         headers = ["Time", "User", "Event", "Description", "Details", "Suspicious"]
         table_data = []
         for log in page_logs:
@@ -62,11 +56,10 @@ def display_system_logs_paginated(logs):
             ])
 
         print("=" * 174)
-        print(f"| {'Time':<30} | {'User':<15} | {'Event':<20} | {'Description':<50} | {'Details':<30} | {'Suspicious':<10} |")
+        print(f"| {'Time':<30} | {'User':<15} | {'Event':<20} | {'Description':<80} | {'Details':<50} | {'Suspicious':<10} |")
         print("=" * 174)
         for row in table_data:
-            # for row 5 split the margin between in front and after the text
-            print(f"| {row[0]:<30} | {row[1]:<15} | {row[2]:<20} | {row[3]:<50} | {row[4]:<30} | {row[5]:^10} |")
+            print(f"| {row[0]:<30} | {row[1]:<15} | {row[2]:<20} | {row[3]:<80} | {row[4]:<50} | {row[5]:^10} |")
 
 
         print("\n[N] Next Page | [P] Previous Page | [Q] Quit to Menu")

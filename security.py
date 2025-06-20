@@ -35,7 +35,6 @@ class SecurityManager:
             decrypted_bytes = self.fernet.decrypt(encrypted_data)
             return decrypted_bytes.decode('utf-8')
         except InvalidToken:
-            # This error occurs if the token is invalid or has been tampered with.
             print("Error: Decryption failed. The data may be corrupt or tampered with.")
             return None
 

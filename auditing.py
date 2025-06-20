@@ -36,7 +36,6 @@ def _extract_log_details(func, result, *args, **kwargs):
         if key in id_keys:
             details['target_id' if 'id' in key else key] = value
 
-    # Extra per functie
     func_name = func.__name__
     if func_name == 'add_new_traveller':
         traveller_data = kwargs.get('data', {})

@@ -240,7 +240,7 @@ class DataAccess:
         for profile in self.in_memory_data['user_profiles']:
             print("Checking profile:", profile)
             if profile['user_id'] == user_id:
-                return UserProfile(**profile)
+                return UserProfile(**profile), username
 
 
 

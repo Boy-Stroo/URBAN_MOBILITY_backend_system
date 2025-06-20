@@ -1,12 +1,6 @@
 import time
 from datetime import datetime, timedelta
 
-TABLE_STYLES = {
-    "default": "grid",
-    "compact": "pipe",
-    "detailed": "fancy_grid"
-}
-
 def display_search_results_table(items, display_key):
     print("Displaying search results")
     for index, item in enumerate(items):
@@ -34,34 +28,61 @@ def display_system_logs_paginated(logs):
     total_pages = (len(logs) - 1) // page_size + 1
 
     while True:
+        # Import moved inside to avoid circular dependency issues
         from ui_utils import display_header, get_input
         display_header(f"System Logs (Page {page + 1}/{total_pages})")
 
         start_index = page * page_size
         end_index = start_index + page_size
-
         page_logs = logs[start_index:end_index]
 
+        # Define headers and column widths
         headers = ["Time", "User", "Event", "Description", "Details", "Suspicious"]
-        table_data = []
+        widths = {'Time': 26, 'User': 15, 'Event': 28, 'Description': 55, 'Details': 60, 'Suspicious': 10}
+        total_width = sum(widths.values()) + len(widths) * 3 + 1
+
+        # --- Print Table Header ---
+        print("=" * total_width)
+        header_line = "| "
+        for h in headers:
+            header_line += f"{h:<{widths[h]}} | "
+        print(header_line)
+        print("=" * total_width)
+
+        # --- Print Table Rows ---
         for log in page_logs:
-            suspicious_flag = "[!]" if log['is_suspicious'] else ""
-            table_data.append([
-                log['timestamp'],
-                log['username'],
-                log['event_type'],
-                log['description'],
-                log['additional_info'] or "N/A",
-                suspicious_flag
-            ])
+            suspicious_flag = "[!]" if log.get('is_suspicious') else ""
 
-        print("=" * 259)
-        print(f"| {'Time':<30} | {'User':<15} | {'Event':<25} | {'Description':<80} | {'Details':<80} | {'Suspicious':<10} |")
-        print("=" * 259)
-        for row in table_data:
-            print(f"| {row[0]:<30} | {row[1]:<15} | {row[2]:<25} | {row[3]:<80} | {row[4]:<80} | {row[5]:^10} |")
+            # Format timestamp to be shorter and cleaner
+            try:
+                ts = datetime.fromisoformat(log['timestamp']).strftime('%Y-%m-%d %H:%M:%S')
+            except (ValueError, TypeError):
+                ts = log.get('timestamp', 'N/A')
 
+            # Truncate long values to fit in columns
+            def truncate(text, length):
+                if text is None:
+                    return "N/A"
+                text = str(text)
+                return (text[:length - 3] + '...') if len(text) > length else text
 
+            row_data = {
+                'Time': ts,
+                'User': truncate(log.get('username'), widths['User']),
+                'Event': truncate(log.get('event_type'), widths['Event']),
+                'Description': truncate(log.get('description'), widths['Description']),
+                'Details': truncate(log.get('additional_info'), widths['Details']),
+                'Suspicious': suspicious_flag
+            }
+
+            row_line = "| "
+            for h in headers:
+                align = "^" if h == 'Suspicious' else "<"
+                row_line += f"{row_data[h]:{align}{widths[h]}} | "
+            print(row_line)
+        print("-" * total_width)
+
+        # --- Pagination Controls ---
         print("\n[N] Next Page | [P] Previous Page | [Q] Quit to Menu")
         choice = get_input("Your choice").upper()
 

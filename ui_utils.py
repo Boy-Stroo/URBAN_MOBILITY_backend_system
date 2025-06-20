@@ -11,9 +11,10 @@ def clear_screen():
 
 def display_header(title):
     clear_screen()
-    print("===================================================")
-    print(f"      Urban Mobility Backend System - {title}")
-    print("===================================================")
+    header = "Urban Mobility Backend System - " + title
+    print("=============================================================================")
+    print(f"{header:^77}")
+    print("=============================================================================")
     print()
 
 

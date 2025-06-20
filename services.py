@@ -14,7 +14,7 @@ security = SecurityManager()
 da = da.DataAccess()
 
 
-@audit_activity("ADD_TRAVELLER", "New traveller added with ID: {result}", "Failed attempt to add traveller.")
+@audit_activity("ADD_TRAVELLER", "Added new traveller account", "Failed to add new traveller")
 def add_new_traveller(data, current_user):
     if authorization.has_permission(current_user.role, 'add_traveller') is True:
         try:
@@ -57,7 +57,7 @@ def get_traveller_details(traveller_id, current_user):
     return None
 
 
-@audit_activity("UPDATE_TRAVELLER", "Successfully updated traveller", "Failed to update traveller")
+@audit_activity("UPDATE_TRAVELLER", "Updated traveller account details", "Failed to update traveller details")
 def update_traveller_details(traveller_obj, current_user):
     if authorization.has_permission(current_user.role, 'update_traveller') is True:
         return da.update_traveller(traveller_obj)
@@ -66,8 +66,7 @@ def update_traveller_details(traveller_obj, current_user):
     return False
 
 
-@audit_activity("DELETE_TRAVELLER", "Successfully deleted traveller", "Failed to delete traveller",
-                suspicious_on_fail=True)
+@audit_activity("DELETE_TRAVELLER", "Deleted traveller account", "Failed to delete traveller account", suspicious_on_fail=True)
 def delete_traveller_record(traveller_id, current_user):
     if authorization.has_permission(current_user.role, 'delete_traveller') is True:
         return da.delete_traveller_by_id(traveller_id)
@@ -75,8 +74,7 @@ def delete_traveller_record(traveller_id, current_user):
     print("Error: Permission denied.")
     return False
 
-
-@audit_activity("ADD_USER", "New Service Engineer created with ID: {result}", "Failed to create Service Engineer.")
+@audit_activity("ADD_USER", "Created new Service Engineer: '{username}'", "Failed to create Service Engineer: '{username}'")
 def add_new_service_engineer(username, password, first_name, last_name, current_user):
     if authorization.has_permission(current_user.role, 'add_service_engineer') is True:
         try:
@@ -103,8 +101,8 @@ def add_new_service_engineer(username, password, first_name, last_name, current_
     return None
 
 
-@audit_activity("ADD_SYSTEM_ADMIN", "New System Administrator created with ID: {result}",
-                "Failed to create System Administrator.", suspicious_on_fail=True)
+@audit_activity("ADD_SYSTEM_ADMIN", "New System Administrator: {username}",
+                "Failed to create System Administrator: {username}", suspicious_on_fail=True)
 def add_new_system_admin(username, password, first_name, last_name, current_user):
     if authorization.has_permission(current_user.role, 'add_system_admin') is True:
         try:
@@ -177,7 +175,7 @@ def get_system_admin_details(user_id, current_user):
     return da.get_user_profile_by_user_id(user_id)
 
 
-@audit_activity("UPDATE_OWN_PROFILE", "Successfully updated own profile", "Failed to update own profile")
+@audit_activity("UPDATE_OWN_PROFILE", "User updated their own profile", "User failed to update their own profile")
 def update_own_profile(user_id, first_name, last_name, current_user):
     if authorization.has_permission(current_user.role, 'update_own_profile') is True:
         return da.update_user_profile(user_id, first_name, last_name)
@@ -186,8 +184,7 @@ def update_own_profile(user_id, first_name, last_name, current_user):
     return False
 
 
-@audit_activity("CHANGE_OWN_PASSWORD", "User successfully changed their password", "Password change failed",
-                suspicious_on_fail=True)
+@audit_activity("CHANGE_OWN_PASSWORD", "User changed their own password", "Password change failed", suspicious_on_fail=True)
 def change_own_password(current_user, old_password, new_password):
     if authorization.has_permission(current_user.role, 'change_own_password') is True:
         stored_hash = da.get_user_hash_by_id(current_user.user_id)
@@ -224,7 +221,7 @@ def update_system_admin_profile(profile_obj, current_user):
     return False
 
 
-@audit_activity("DELETE_USER", "Successfully deactivated user", "Failed to deactivate user", suspicious_on_fail=True)
+@audit_activity("DELETE_USER", "Deactivated Service Engineer account", "Failed to deactivate Service Engineer account", suspicious_on_fail=True)
 def delete_service_engineer(user_id, current_user):
     if authorization.has_permission(current_user.role, 'delete_service_engineer') is True:
         return da.delete_user_by_id(user_id)
@@ -242,7 +239,7 @@ def delete_system_admin(user_id, current_user):
     return False
 
 
-@audit_activity("PASSWORD_RESET", "Password was successfully reset", "Password reset failed", suspicious_on_fail=True)
+@audit_activity("PASSWORD_RESET", "Reset password for Service Engineer", "Failed to reset password for Service Engineer", suspicious_on_fail=True)
 def reset_service_engineer_password(user_id, new_password, current_user):
     if authorization.has_permission(current_user.role, 'reset_service_engineer_password') is True:
         hashed_password = security.hash_password(new_password)
@@ -253,7 +250,7 @@ def reset_service_engineer_password(user_id, new_password, current_user):
     return False
 
 
-@audit_activity("ADD_SCOOTER", "New scooter added with ID: {result}", "Failed attempt to add scooter.")
+@audit_activity("ADD_SCOOTER", "Added new scooter to fleet", "Failed to add new scooter")
 def add_new_scooter(data, current_user):
     if authorization.has_permission(current_user.role, 'add_scooter') is True:
         try:
@@ -322,7 +319,6 @@ def view_system_logs(current_user):
 
 
 def check_for_suspicious_activity(current_user):
-    print("Im in suspicious activity")
     if authorization.has_permission(current_user.role, 'view_system_logs') is True:
         count = da.get_unread_suspicious_logs_count()
         if count > 0:

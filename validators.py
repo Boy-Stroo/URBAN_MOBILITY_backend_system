@@ -4,28 +4,31 @@ from datetime import datetime
 # --- Regular Expression Patterns ---
 RE_ZIP_CODE = re.compile(r'^[1-9][0-9]{3}[A-Z]{2}$')
 RE_MOBILE_PHONE = re.compile(r'^\+31-6-\d{8}$')
-RE_EMAIL = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
+RE_EMAIL = re.compile(r'^(?=.{1,254}$)[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
 # Driving license regex is now handled within the function for more complex logic.
 RE_PASSWORD_COMPLEXITY = re.compile(
     r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&_#-])[A-Za-z\d@$!%*?&_#-]{12,30}$'
 )
 
-RE_speed = re.compile(r'^(100(?:\.0+)?|[1-9]\d?(?:\.\d+)?|0?\.\d+)$')
-RE_battery_capacity = re.compile(r'^(?=.{1,4}$)(?!0+(?:\.0+)?$)(\d+)(\.\d+)?$')
+RE_MODEL = re.compile(r"^[A-Za-z0-9\s\-'.]{0,50}$") # Allows letters, numbers, spaces, hyphens, apostrophes, and dots, limited to 50 characters
+RE_speed = re.compile(r'^(100|[1-9][0-9]?)$') # Checks for speed between 1 and 100 km/h
+RE_battery_capacity = re.compile(r'^([1-9][0-9]{0,3})$') # Checks for battery capacity between 1 and 9999 Wh
 RE_SCOOTER_SERIAL = re.compile(r'^[A-Za-z0-9]{10,17}$')
-RE_ALPHA_ONLY = re.compile(r'^[a-zA-Z\s.-]+$') # Allows letters, spaces, hyphens, dots
+RE_ALPHA_ONLY = re.compile(r"^[A-Za-z\s\-'.]{0,100}$") # Allows letters, spaces, hyphens, dots, apostrophes, and is limited to 100 characters
 RE_ALPHA_NUMERIC_ONLY = re.compile(r'^[a-zA-Z0-9\s.,#-]+$') # Allows more characters for addresses
-RE_HOUSE_NUMBER = re.compile(r'^[1-9]\d{0,2}(\s*-?\s*[a-zA-Z0-9]{0,2})?$') # For Dutch house numbers e.g., 123, 123A, 123-A
+RE_HOUSE_NUMBER = re.compile(r'^[1-9][0-9]{0,3}[- ]?[A-Za-z]?$') # For Dutch house numbers e.g., 123, 123A, 123-A
 RE_FIVE_DECIMAL = re.compile(r'^\d{1,5}(\.\d{5})?$')
+RE_SoC = re.compile(r'^(?:100(?:\.0{1,2})?|[0-9]{1,2}(?:\.[0-9]{1,2})?)$') # State of Charge (SoC) must be between 0 and 100, allowing up to 2 decimal places
+RE_MILEAGE = re.compile(r'^(?:0|[1-9][0-9]{0,9})(?:\.[0-9]{1,2})?$') # Mileage must be a number between 0 and 9999999999.99, allowing up to 2 decimal places
 
 # --- Validation Functions ---
 # Each function now returns a tuple: (is_valid: bool, message: str or None)
 
 def is_valid_name(name):
-    """Validates that a name contains only alphabetic characters, spaces, or hyphens."""
-    if RE_ALPHA_ONLY.match(name) and len(name) < 50:
+    """Validates that a name contains only alphabetic characters, spaces, apostrophes or hyphens."""
+    if RE_ALPHA_ONLY.match(name):
         return True, None
-    return False, "Input must only contain letters, spaces, dots, or hyphens and must be shorter than 50 characters."
+    return False, "Input must only contain letters, spaces, apostrophes, dots or hyphens (no numbers) and must be shorter than 100 characters."
 
 def is_valid_gender(gender):
     """Validates that gender is either 'male' or 'female'."""
@@ -35,9 +38,9 @@ def is_valid_gender(gender):
 
 def is_valid_address_field(field):
     """Validates that a street name contains reasonable characters."""
-    if RE_ALPHA_ONLY.match(field) and len(field) < 100:
+    if RE_ALPHA_ONLY.match(field):
         return True, None
-    return False, "Street name must only contain letters, spaces, dots, or hyphens (no numbers) and must be shorter than 100 characters."
+    return False, "Street name must only contain letters, spaces, apostrophes, dots or hyphens (no numbers) and must be shorter than 100 characters."
 
 def is_valid_house_number(number):
     """Validates a Dutch house number format (e.g., 123, 123A, 123-A)."""
@@ -45,18 +48,25 @@ def is_valid_house_number(number):
         return True, None
     return False, "Invalid house number format. It should be a number with an optional suffix (e.g., 24 B)."
 
-def is_valid_date(date_string, date_format='%Y-%m-%d'):
+def is_valid_date(date_string, date_format='%Y-%m-%d', is_birth_date=False):
     """Validates if a string is a valid date, is in the correct format, and is not in the future."""
     try:
         b_date = datetime.strptime(date_string, date_format).date()
         _120_YEARS_AGO = datetime.now().date().replace(year=datetime.now().year - 120)
         if b_date < _120_YEARS_AGO:
             return False, "Date cannot be more than 120 years ago."
-        if b_date > datetime.now().date():
+        elif is_birth_date:
+            _16_YEARS_AGO = datetime.now().date().replace(year=datetime.now().year - 16)
+            if b_date > _16_YEARS_AGO:
+                return False, "You must be at least 16 years old."
+        elif b_date > datetime.now().date():
             return False, "Date cannot be in the future."
         return True, None
     except ValueError:
         return False, f"Invalid date format. Please use {date_format}."
+
+def is_valid_birth_date(date_string):
+    return is_valid_date(date_string, is_birth_date=True) # extra check for age
 
 def is_valid_zip_code(zip_code):
     """Validates Dutch zip code format (DDDDXX)."""
@@ -66,10 +76,10 @@ def is_valid_zip_code(zip_code):
 
 def is_valid_city(city):
     """Validates if city is in city list"""
-    cities = ['Rotterdam', 'Schiedam', 'Delft', 'The Hague', 'Amsterdam', 'Spijkenisse', 'Barendrecht', 'Brielle', 'Hellevoetsluis', 'Vlaardingen']
-    if is_valid_name(city) and city in cities:
+    _cities = ['Rotterdam', 'Schiedam', 'Delft', 'The Hague', 'Amsterdam', 'Spijkenisse', 'Barendrecht', 'Brielle', 'Hellevoetsluis', 'Vlaardingen']
+    if city in _cities:
         return True, None
-    return False, "Invalid city. Must be one of the predefined cities: {}".format(", ".join(cities))
+    return False, "Invalid city. Must be one of the predefined cities: {}".format(", ".join(_cities))
 
 def is_valid_mobile_phone(phone):
     """Validates Dutch mobile phone format (+31-6-DDDDDDDD)."""
@@ -79,7 +89,7 @@ def is_valid_mobile_phone(phone):
 
 def is_valid_email(email):
     """Validates email format."""
-    if RE_EMAIL.match(email) and len(email) < 254:
+    if RE_EMAIL.match(email):
         return True, None
     return False, "Invalid email address format."
 
@@ -130,24 +140,20 @@ def is_valid_scooter_serial(serial):
 
 def is_valid_soc(soc_string):
     """Validates State of Charge (SoC) is between 0 and 100."""
-    try:
-        soc = float(soc_string)
-        if 0 <= soc <= 100:
-            return True, None
-        return False, "SoC must be a number between 0 and 100."
-    except (ValueError, TypeError):
-        return False, "SoC must be a valid number."
+    if RE_SoC.match(soc_string):
+        return True, None
+    return False, "SoC must be a valid number between 0 and 100."
 
 def is_valid_gps_coordinate(coord_string, coord_type):
     """Validates latitude or longitude format and range."""
     try:
-        coord = float(coord_string)
+        _coord = float(coord_string)
         if coord_type == 'latitude':
-            if -90 <= coord <= 90:
+            if -90 <= _coord <= 90:
                 return True, None
             return False, "Latitude must be between -90 and 90."
         if coord_type == 'longitude':
-            if -180 <= coord <= 180:
+            if -180 <= _coord <= 180:
                 return True, None
             return False, "Longitude must be between -180 and 180."
         return False, "Invalid coordinate type specified."
@@ -156,7 +162,7 @@ def is_valid_gps_coordinate(coord_string, coord_type):
 
 def is_valid_integer(value):
     """Checks if a string represents a valid integer."""
-    if value.isdigit():
+    if value.isdigit() and value <= 9999999999:
         return True, None
     return False, "Input must be a whole number."
 
@@ -165,6 +171,12 @@ def is_valid_speed(value):
     if RE_speed.match(value):
         return True, None
     return False, "Speed must be a number between 1 and 100."
+
+def is_valid_mileage(value):
+    """Checks if a string represents a valid mileage in km."""
+    if RE_MILEAGE.match(value):
+        return True, None
+    return False, "Mileage must be a number between 0 and 9999999999.99"
 
 def is_valid_battery_capacity(value):
     """Checks if a string represents a valid battery capacity in Wh."""
@@ -180,28 +192,39 @@ def is_valid_float(value):
     except ValueError:
         return False, "Input must be a valid number (e.g., 50 or 25.5)."
 
+def is_valid_OoS(value):
+    """Checks if a string represents a valid yes/no value."""
+    if value.lower() in ['yes', 'no']:
+        return True, None
+    return False, "Input must be 'yes' or 'no'."
 
-def validate_rotterdam_coordinates(coord, direction):
+def is_valid_model(value):
+    """Validates that a string is shorter than 100 characters."""
+    if RE_MODEL.match(value):
+        return True, None
+    return False, "Input must be a string shorter than 100 characters."
+
+def validate_rotterdam_coordinates(coords, directions):
     """Validate coordinates are within Rotterdam region"""
     rotterdam_bounds = {
         'latitude': {'min': 51.89000, 'max': 51.94000},
         'longitude':{'min': 4.40000, 'max': 4.55000}
     }
 
-    if not RE_FIVE_DECIMAL.match(coord):
+    if not RE_FIVE_DECIMAL.match(coords):
         return False, "Coordinate must be a number with 5 decimal places. For example, 51.92250."
 
     try:
-        float_coord = float(coord)
+        float_coord = float(coords)
     except ValueError:
         return False, "Coordinate must be a valid number."
 
-    succes = rotterdam_bounds[direction]['min'] <= float_coord <= rotterdam_bounds[direction]['max']
-    if succes:
-        return True, f"{direction.capitalize()} coordinate {coord} is valid for Rotterdam."
+    _success = rotterdam_bounds[directions]['min'] <= float_coord <= rotterdam_bounds[directions]['max']
+    if _success:
+        return True, f"{directions.capitalize()} coordinate {coords} is valid for Rotterdam."
     else:
-        return False, f"{direction.capitalize()} coordinate {coord} is out of bounds for Rotterdam. " \
-                      f"Must be between {rotterdam_bounds[direction]['min']} and {rotterdam_bounds[direction]['max']}."
+        return False, f"{directions.capitalize()} coordinate {coords} is out of bounds for Rotterdam. " \
+                      f"Must be between {rotterdam_bounds[directions]['min']} and {rotterdam_bounds[directions]['max']}."
 
 if __name__ == "__main__":
     coord = "51.92250"

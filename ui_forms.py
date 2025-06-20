@@ -65,7 +65,7 @@ def ui_add_traveller(user):
     display_header("Add New Traveller")
     first_name = get_validated_input("First Name", validators.is_valid_name)
     last_name = get_validated_input("Last Name", validators.is_valid_name)
-    birthday = get_validated_input("Birthday (YYYY-MM-DD)", validators.is_valid_date)
+    birthday = get_validated_input("Birthday (YYYY-MM-DD)", validators.is_valid_birth_date)
     gender = get_validated_input("Gender (male/female)", validators.is_valid_gender)
     street_name = get_validated_input("Street Name", validators.is_valid_address_field)
     house_number = get_validated_input("House Number", validators.is_valid_house_number)
@@ -146,7 +146,7 @@ def ui_update_traveller(user):
             "2": {"prompt": "Last Name", "attr": "last_name", "value": traveller_obj.last_name,
                   "validator": validators.is_valid_name},
             "3": {"prompt": "Birthday", "attr": "birthday", "value": traveller_obj.birthday,
-                  "validator": validators.is_valid_date},
+                  "validator": validators.is_valid_birth_date},
             "4": {"prompt": "Gender (male/female)", "attr": "gender", "value": traveller_obj.gender, "validator": validators.is_valid_gender},
             "5": {"prompt": "Street Name", "attr": "street_name", "value": traveller_obj.street_name,
                   "validator": validators.is_valid_address_field},
@@ -528,8 +528,8 @@ def ui_add_scooter(user):
     display_header("Add New Scooter")
 
     scooter_str_data = {
-        'brand': get_input("Brand"),
-        'model': get_input("Model"),
+        'brand': get_validated_input("Brand", validators.is_valid_name),
+        'model': get_validated_input("Model", validators.is_valid_model),
         'serial_number': get_validated_input("Serial Number (10-17 chars)", validators.is_valid_scooter_serial),
         'top_speed_kmh': get_validated_input("Top Speed (km/h)", validators.is_valid_speed),
         'battery_capacity_wh': get_validated_input("Battery Capacity (Wh)", validators.is_valid_battery_capacity),
@@ -540,8 +540,8 @@ def ui_add_scooter(user):
                                                  lambda v: validators.validate_rotterdam_coordinates(v, 'latitude')),
         'location_longitude': get_validated_input("Longitude",
                                                   lambda v: validators.validate_rotterdam_coordinates(v, 'longitude')),
-        'out_of_service': get_input("Out of service? (yes/no)").lower(),
-        'mileage_km': get_validated_input("Current Mileage (km)", validators.is_valid_float),
+        'out_of_service': get_validated_input("Out of service? (yes/no)", validators.is_valid_OoS).lower(),
+        'mileage_km': get_validated_input("Current Mileage (km)", validators.is_valid_mileage),
         'last_maintenance_date': get_validated_input("Last Maintenance Date (YYYY-MM-DD)", validators.is_valid_date,
                                                      required=False)
     }
@@ -623,14 +623,14 @@ def ui_update_scooter(user, limited=False):
         return
 
     full_menu = {
-        "1": {"prompt": "Brand", "attr": "brand", "value": scooter_obj.brand, "validator": None},
-        "2": {"prompt": "Model", "attr": "model", "value": scooter_obj.model, "validator": None},
+        "1": {"prompt": "Brand", "attr": "brand", "value": scooter_obj.brand, "validator": validators.is_valid_name},
+        "2": {"prompt": "Model", "attr": "model", "value": scooter_obj.model, "validator": validators.is_valid_model},
         "3": {"prompt": "Serial Number", "attr": "serial_number", "value": scooter_obj.serial_number,
               "validator": validators.is_valid_scooter_serial},
         "4": {"prompt": "Top Speed (km/h)", "attr": "top_speed_kmh", "value": scooter_obj.top_speed_kmh,
-              "validator": validators.is_valid_integer},
+              "validator": validators.is_valid_speed},
         "5": {"prompt": "Battery Capacity (Wh)", "attr": "battery_capacity_wh",
-              "value": scooter_obj.battery_capacity_wh, "validator": validators.is_valid_integer},
+              "value": scooter_obj.battery_capacity_wh, "validator": validators.is_valid_battery_capacity},
         "6": {"prompt": "SoC (%)", "attr": "soc_percentage", "value": scooter_obj.soc_percentage,
               "validator": validators.is_valid_soc},
         "7": {"prompt": "Min Target SoC (%)", "attr": "target_soc_min", "value": scooter_obj.target_soc_min,
@@ -642,9 +642,9 @@ def ui_update_scooter(user, limited=False):
         "10": {"prompt": "Longitude", "attr": "location_longitude", "value": scooter_obj.location_longitude,
                "validator": lambda v: validators.validate_rotterdam_coordinates(v, 'longitude')},
         "11": {"prompt": "Out of Service", "attr": "out_of_service",
-               "value": "Yes" if scooter_obj.out_of_service else "No", "validator": None},
+               "value": "Yes" if scooter_obj.out_of_service is True else "No", "validator": validators.is_valid_OoS},
         "12": {"prompt": "Mileage (km)", "attr": "mileage_km", "value": scooter_obj.mileage_km,
-               "validator": validators.is_valid_float},
+               "validator": validators.is_valid_mileage},
         "13": {"prompt": "Last Maintenance Date", "attr": "last_maintenance_date",
                "value": scooter_obj.last_maintenance_date, "validator": validators.is_valid_date},
     }

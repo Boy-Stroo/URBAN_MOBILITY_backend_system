@@ -372,6 +372,27 @@ def ui_add_service_engineer(user):
     services.add_new_service_engineer(username, password, first_name, last_name, user)
     input("\nPress Enter to return to the menu...")
 
+def ui_search_service_engineers(user):
+    """UI flow for searching Service Engineers and viewing details."""
+    display_header("Search for Service Engineer")
+
+    selected = _search_and_select_item(
+        search_prompt="Enter username or name to search for",
+        search_function=services.find_service_engineers,
+        current_user=user,
+        result_formatter=lambda r: {'display': f"{r['name']} ({r['username']})", 'id': r['id']},
+        selection_prompt="Select a Service Engineer to view details:",
+        no_results_message="\nNo engineers found matching '{query}'."
+    )
+
+    if selected:
+        profile_obj, username = services.get_service_engineer_details(selected['id'], user)
+        if profile_obj:
+            display_header(f"Details for {profile_obj.first_name} {profile_obj.last_name}")
+            print(f"  Username: {username}")
+            print(f"  Registered on: {profile_obj.registration_date}")
+    input("\nPress Enter to return...")
+
 
 def ui_update_service_engineer(user):
     """UI flow for finding and updating a Service Engineer."""
@@ -649,7 +670,7 @@ def ui_update_scooter(user, limited=False):
                "value": scooter_obj.last_maintenance_date, "validator": validators.is_valid_date},
     }
 
-    limited_menu_keys = ["6", "9", "10", "11", "12", "13"]
+    limited_menu_keys = ["6", "7", "8", "9", "10", "11", "12", "13"]
     update_menu = {k: full_menu[k] for k in limited_menu_keys} if limited else full_menu
 
     while True:

@@ -24,7 +24,7 @@ PERMISSIONS = {
         'search_service_engineers',
         'view_system_logs',
         'create_backup',
-        'restore_backup',  # SysAdmin can only restore with a code
+        'restore_backup',
     },
     'superadmin': {
         'add_system_admin',

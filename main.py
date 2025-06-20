@@ -2,6 +2,7 @@ import time
 import data_access
 import services
 import ui_forms
+import sys
 from security import SecurityManager
 from models import User
 from ui_utils import display_header, get_input, get_password_input, clear_screen
@@ -94,6 +95,7 @@ class AuthenticationService:
                 description=f"Multiple failed login attempts ({attempts}) for username: '{username}'",
                 is_suspicious=1
             )
+            sys.exit()
 
         print("Error: Invalid username or password.")
         return None
@@ -169,9 +171,11 @@ class UrbanMobilityApp:
                 main_menu.add_option('3', "Manage Scooter Fleet", self.scooter_management_menu)
                 main_menu.add_option('4', "View System Logs", lambda: ui_forms.ui_view_system_logs(self.current_user))
                 main_menu.add_option('5', "Manage Backups", self.backup_management_menu)
+                main_menu.add_option('6', "Manage My Account", self.account_management_menu)
             case 'serviceengineer' | 'ServiceEngineer':
-                main_menu.add_option('1', "Update Scooter Status", self.scooter_update_menu_limited)
-                main_menu.add_option('2', "Manage My Account", self.account_management_menu)
+                main_menu.add_option('1', "Search & View Scooter", lambda: ui_forms.ui_search_scooters(self.current_user))
+                main_menu.add_option('2', "Update Scooter Status", self.scooter_update_menu_limited)
+                main_menu.add_option('3', "Manage My Account", self.account_management_menu)
         main_menu.add_option('L', "Logout", self.logout)
         main_menu.add_option('Q', "Quit Application", self.quit)
         result = main_menu.display()
@@ -251,11 +255,10 @@ class UrbanMobilityApp:
     def service_engineer_management_menu(self):
         menu = ConsoleMenu("Service Engineer Management")
         menu.add_option('1', "Add New Service Engineer", lambda: ui_forms.ui_add_service_engineer(self.current_user))
-        menu.add_option('2', "Update Service Engineer Profile",
-                        lambda: ui_forms.ui_update_service_engineer(self.current_user))
-        menu.add_option('3', "Delete Service Engineer", lambda: ui_forms.ui_delete_service_engineer(self.current_user))
-        menu.add_option('4', "Reset Service Engineer Password",
-                        lambda: ui_forms.ui_reset_service_engineer_password(self.current_user))
+        menu.add_option('2', "Search & View Service Engineer", lambda: ui_forms.ui_search_service_engineers(self.current_user))
+        menu.add_option('3', "Update Service Engineer Profile", lambda: ui_forms.ui_update_service_engineer(self.current_user))
+        menu.add_option('4', "Delete Service Engineer", lambda: ui_forms.ui_delete_service_engineer(self.current_user))
+        menu.add_option('5', "Reset Service Engineer Password", lambda: ui_forms.ui_reset_service_engineer_password(self.current_user))
         menu.add_option('B', "Back to Main Menu", None)
         menu.display()
 

@@ -208,9 +208,8 @@ class DataAccess:
             with self.db_connection() as conn:
                 cursor = conn.cursor()
                 cursor.execute(sql, (new_password_hash, user_id))
-                if cursor.rowcount > 0:
-                    self.load_all_data_to_memory()
-                return cursor.rowcount > 0
+                self.load_all_data_to_memory()
+                return True
         except Exception as e:
             print(f"An error occurred while updating the password: {e}")
             return False
@@ -234,12 +233,14 @@ class DataAccess:
         """Fetches a UserProfile object by the user's ID using in-memory decrypted data."""
         # Search for the user profile in the in-memory data
         username = ""
+        print("My user_id:", user_id)
         for user in self.in_memory_data['users']:
             if user['user_id'] == user_id:
                 username = user['username']
         for profile in self.in_memory_data['user_profiles']:
+            print("Checking profile:", profile)
             if profile['user_id'] == user_id:
-                return UserProfile(**profile), username
+                return UserProfile(**profile)
 
 
 
@@ -250,13 +251,12 @@ class DataAccess:
         sql = "UPDATE UserProfiles SET first_name = ?, last_name = ? WHERE user_id = ?"
         encrypted_first_name = self.security.encrypt_data(first_name)
         encrypted_last_name = self.security.encrypt_data(last_name)
+
         try:
             with self.db_connection() as conn:
-                cursor = conn.cursor()
                 conn.execute(sql, (encrypted_first_name, encrypted_last_name, user_id))
-                if cursor.rowcount > 0:
-                    self.load_all_data_to_memory()
-                return cursor.rowcount > 0
+                self.load_all_data_to_memory()
+                return True
         except Exception as e:
             print(f"An error occurred while updating user profile: {e}")
             return False
@@ -292,9 +292,8 @@ class DataAccess:
             with self.db_connection() as conn:
                 cursor = conn.cursor()
                 cursor.execute(sql, (user_id,))
-                if cursor.rowcount > 0:
-                    self.load_all_data_to_memory()
-                return cursor.rowcount > 0
+                self.load_all_data_to_memory()
+                return True
         except Exception as e:
             print(f"An error occurred while deleting a user: {e}")
             return False

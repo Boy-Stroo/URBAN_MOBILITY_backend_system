@@ -228,7 +228,7 @@ def ui_delete_traveller(user):
 def ui_update_own_profile(user):
     """UI flow for a user to update their own profile."""
     display_header("Update My Profile")
-    profile_obj, username = services.get_service_engineer_details(user.user_id, user)
+    profile_obj = services.get_service_engineer_details(user.user_id, user)
     if not profile_obj:
         print("Could not retrieve your profile.")
         input("\nPress Enter...")

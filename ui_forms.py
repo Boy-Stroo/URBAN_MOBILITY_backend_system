@@ -372,7 +372,7 @@ def ui_search_service_engineers(user):
     )
 
     if selected:
-        profile_obj, username = services.get_service_engineer_details(selected['id'], user)
+        profile_obj = services.get_service_engineer_details(selected['id'], user)
         if profile_obj:
             display_header(f"Details for {profile_obj.first_name} {profile_obj.last_name}")
             print(f"  Username: {username}")

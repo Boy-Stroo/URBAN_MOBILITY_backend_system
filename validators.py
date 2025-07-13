@@ -12,6 +12,7 @@ RE_speed = re.compile(r'^(100|[1-9][0-9]?)$')
 RE_battery_capacity = re.compile(r'^([1-9][0-9]{0,3})$')
 RE_SCOOTER_SERIAL = re.compile(r'^[A-Za-z0-9]{10,17}$')
 RE_ALPHA_ONLY = re.compile(r"^(?=.*[A-Za-z])[A-Za-z\s\-'.]{1,100}$")
+RE_USERNAME = re.compile(r'^[a-zA-Z0-9_.\']{8,10}$')
 RE_ALPHA_NUMERIC_ONLY = re.compile(r'^[a-zA-Z0-9\s.,#-]+$')
 RE_HOUSE_NUMBER = re.compile(r'^[1-9][0-9]{0,3}[- ]?[A-Za-z]?$')
 RE_FIVE_DECIMAL = re.compile(r'^\d{1,5}(\.\d{5})?$')
@@ -52,7 +53,7 @@ def is_valid_date(date_string, date_format='%Y-%m-%d', is_birth_date=False):
             return False, "Date cannot be in the future."
         return True, None
     except ValueError:
-        return False, f"Invalid date format. Please use {date_format}."
+        return False, f"Invalid date format. Please use YYYY-MM-OD."
 
 def is_valid_birth_date(date_string):
     return is_valid_date(date_string, is_birth_date=True)
@@ -100,14 +101,11 @@ def is_valid_password(password):
         return True, None
     return False, "Password must be 12-30 chars with an uppercase, lowercase, digit, and special character."
 
+
 def is_valid_username(username):
-    if not (8 <= len(username) <= 10):
-        return False, "Username must be between 8 and 10 characters long."
-
-    if not re.match(r'^[a-zA-Z0-_.\']+$', username):
-        return False, "Username can only contain letters (a-z), numbers (0-9), underscores (_), apostrophes ('), and periods (.)."
-
-    return True, None
+    if RE_USERNAME.match(username):
+        return True, None
+    return False, "Username must be 8-10 characters long and can only contain letters (a-z), numbers (0-9), underscores (_), apostrophes ('), and periods (.)."
 
 def is_valid_scooter_serial(serial):
     if RE_SCOOTER_SERIAL.match(serial):

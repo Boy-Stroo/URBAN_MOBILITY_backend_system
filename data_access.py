@@ -197,15 +197,18 @@ class DataAccess:
             print(f"An error occurred while adding a user profile: {e}")
             return None
 
-    def get_user_profile_by_user_id(self, user_id):
+    def get_user_profile_by_user_id(self, user_id, add_username=False):
         username = ""
         print("My user_id:", user_id)
         for user in self.in_memory_data['users']:
             if user['user_id'] == user_id:
                 username = user['username']
+
         for profile in self.in_memory_data['user_profiles']:
             print("Checking profile:", profile)
             if profile['user_id'] == user_id:
+                if add_username:
+                    return UserProfile(**profile), username
                 return UserProfile(**profile)
 
 

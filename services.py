@@ -172,7 +172,7 @@ def get_service_engineer_details(user_id, current_user):
 
 
 def get_system_admin_details(user_id, current_user):
-    return da.get_user_profile_by_user_id(user_id)
+    return da.get_user_profile_by_user_id(user_id, add_username=True)
 
 
 @audit_activity("UPDATE_OWN_PROFILE", "User updated their own profile", "User failed to update their own profile")

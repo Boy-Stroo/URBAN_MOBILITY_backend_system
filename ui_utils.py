@@ -41,7 +41,7 @@ def get_validated_input(prompt, validator_func, is_password=False, required=True
             user_input = input(f"{prompt} {pre_prompt}").strip()
             value = pre_prompt + user_input if pre_prompt else user_input
 
-        if not (value if is_password else user_input):
+        if not value:
             if required:
                 print("Error: This field is required.")
                 continue

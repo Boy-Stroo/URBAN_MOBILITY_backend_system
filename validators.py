@@ -104,7 +104,7 @@ def is_valid_username(username):
     if not (8 <= len(username) <= 10):
         return False, "Username must be between 8 and 10 characters long."
 
-    if not re.match(r'^[a-zA-Z0-9_.\']+$', username):
+    if not re.match(r'^[a-zA-Z0-_.\']+$', username):
         return False, "Username can only contain letters (a-z), numbers (0-9), underscores (_), apostrophes ('), and periods (.)."
 
     return True, None

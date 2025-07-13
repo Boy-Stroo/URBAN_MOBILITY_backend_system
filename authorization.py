@@ -39,14 +39,12 @@ def has_permission(user_role, required_permission):
     if user_role == 'superadmin':
         role_permissions.update(PERMISSIONS.get('systemadmin', set()))
         role_permissions.update(PERMISSIONS.get('serviceengineer', set()))
-        return True
+
+    if user_role == 'systemadmin':
+        role_permissions.update(PERMISSIONS.get('serviceengineer', set()))
 
     if required_permission in role_permissions:
         return True
 
-    if user_role == 'systemadmin':
-        service_engineer_permissions = PERMISSIONS.get('serviceengineer', set())
-        if required_permission in service_engineer_permissions:
-            return True
 
     return False

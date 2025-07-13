@@ -212,7 +212,7 @@ def ui_delete_traveller(user):
 
 def ui_update_own_profile(user):
     display_header("Update My Profile")
-    profile_obj = services.get_service_engineer_details(user.user_id, user)
+    profile_obj, _ = services.get_service_engineer_details(user.user_id, user)
     if not profile_obj:
         print("Could not retrieve your profile.")
         input("\nPress Enter...")
@@ -362,7 +362,7 @@ def ui_search_service_engineers(user):
     )
 
     if selected:
-        profile_obj = services.get_service_engineer_details(selected['id'], user)
+        profile_obj, username = services.get_service_engineer_details(selected['id'], user)
         if profile_obj:
             display_header(f"Details for {profile_obj.first_name} {profile_obj.last_name}")
             print(f"  Username: {username}")
@@ -385,7 +385,7 @@ def ui_update_service_engineer(user):
     if not selected:
         return
 
-    profile_obj = services.get_service_engineer_details(selected['id'], user)
+    profile_obj, _ = services.get_service_engineer_details(selected['id'], user)
     if not profile_obj:
         print("Could not retrieve profile details.")
         input("\nPress Enter to return...")

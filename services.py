@@ -168,7 +168,7 @@ def find_service_engineers(query, current_user):
 
 
 def get_service_engineer_details(user_id, current_user):
-    return da.get_user_profile_by_user_id(user_id)
+    return da.get_user_profile_by_user_id(user_id, add_username=True)
 
 
 def get_system_admin_details(user_id, current_user):

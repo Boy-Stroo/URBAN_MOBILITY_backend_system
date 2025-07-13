@@ -205,7 +205,6 @@ class DataAccess:
                 username = user['username']
 
         for profile in self.in_memory_data['user_profiles']:
-            print("Checking profile:", profile)
             if profile['user_id'] == user_id:
                 if add_username:
                     return UserProfile(**profile), username

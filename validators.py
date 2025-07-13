@@ -101,8 +101,8 @@ def is_valid_password(password):
     return False, "Password must be 12-30 chars with an uppercase, lowercase, digit, and special character."
 
 def is_valid_username(username):
-    if not (8 <= len(username) <= 20):
-        return False, "Username must be between 8 and 20 characters long."
+    if not (8 <= len(username) <= 10):
+        return False, "Username must be between 8 and 10 characters long."
 
     if not re.match(r'^[a-zA-Z0-9_.\']+$', username):
         return False, "Username can only contain letters (a-z), numbers (0-9), underscores (_), apostrophes ('), and periods (.)."

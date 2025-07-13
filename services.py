@@ -187,11 +187,14 @@ def update_own_profile(user_id, first_name, last_name, current_user):
 @audit_activity("CHANGE_OWN_PASSWORD", "User changed their own password", "Password change failed", suspicious_on_fail=True)
 def change_own_password(current_user, old_password, new_password):
     if authorization.has_permission(current_user.role, 'change_own_password') is True:
-        stored_hash = da.get_user_hash_by_id(current_user.user_id)
-        if not stored_hash:
-            return False, "Could not find user."
+        user_data = da.find_user_by_username(current_user.username)
+        if not user_data:
+            return False, "User not found."
 
-        if not security.check_password(old_password, stored_hash.encode('utf-8')):
+        _, hashed_password, _ = user_data
+
+
+        if not security.check_password(old_password, hashed_password):
             return False, "Incorrect old password."
 
         new_hashed_password = security.hash_password(new_password)
